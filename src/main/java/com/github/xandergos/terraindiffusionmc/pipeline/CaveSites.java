@@ -677,11 +677,14 @@ public final class CaveSites {
     // ---- Rock shelters (part four round B) ----
 
     /** Shelter candidates: one per cell (blocks) at this chance; most fail the cliff test. */
-    public static final int SHELTER_CELL = 40;
+    // Nov 1: 40 -> 64 (Calvin: a mountain face pocked with dozens of shelters; with the bench test below, a few at most).
+    public static final int SHELTER_CELL = 64;
     public static float SHELTER_CHANCE = 0.55f;
     /** The rise (blocks) over 12 blocks that counts as a cliff. */
     public static int SHELTER_RISE = 14;
     private static final int SHELTER_REACH = 24;
+    /** The bench at a shelter's foot: over this many blocks out from the foot, the ground falls at most the drop. */
+    public static int SHELTER_BENCH = 9, SHELTER_BENCH_DROP = 3;
 
     /** The rock shelters reaching the block rectangle, added to out. */
     public static void shelters(int x0, int z0, int x1, int z1, CaveBiomes.Surface surface, List<Cut> out) {
@@ -733,6 +736,14 @@ public final class CaveSites {
             fx = x;
             fz = z;
             foot = Math.min(foot, g);
+        }
+        // A real foot (Calvin, Nov 1: dozens of shelters pocking a steep mountain face): the shelter sits on a bench or
+        // valley floor under the cliff, so the ground falls no more than SHELTER_BENCH_DROP blocks over the
+        // SHELTER_BENCH blocks out from the foot. Mid-slope on a long steep face the ground keeps falling, and there's
+        // no shelter.
+        for (int k = 3; k <= SHELTER_BENCH; k += 3) {
+            int g = surface.groundTop(fx - Math.round(k * dirX), fz - Math.round(k * dirZ));
+            if (g == Integer.MIN_VALUE || g < foot - SHELTER_BENCH_DROP) return null;
         }
         float depth = 5f + 4f * unit(h, 32), width = 6f + 8f * unit(h, 40), height = 5f + 4f * unit(h, 48);
         // A roof: the cliff stays well above the shelter's top all the way in.

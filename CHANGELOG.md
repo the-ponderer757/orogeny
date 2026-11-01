@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 (Minecraft 26.3)
+
+### Fixes
+- Rock shelters only at the foot of real cliffs, where the ground levels out below them, and on a coarser grid: steep mountain faces are no longer pocked with dozens of overhangs.
+- Mod links (homepage, source, issues) point at the renamed repository, github.com/calvin-bates/orogeny.
+
 ## 1.0.0 (Minecraft 26.3)
 
 First public release of Orogeny, a fork of [Terrain Diffusion](https://github.com/xandergos/terrain-diffusion-mc) by xandergos.
