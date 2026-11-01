@@ -121,7 +121,10 @@ public final class VolcanicSurfaces {
         // spill as lava falls. (Only level spots used to get lava, which left a downhill channel as stripes, Calvin,
         // Nov 1, X 105902 Z 43784.)
         if (tag == Landforms.TAG_LAVA_CHANNEL && own == y && clearOfFuel(data, startX, startZ, x, z)) {
-            int level = own;
+            // Lava can't climb: where the channel runs over a rise in the ground (a bump of the flow's rough surface),
+            // it is cut down through it (an opening of the channel's profile), instead of the lava heaping up over the
+            // hump and pouring down its front (Calvin, Nov 1, X -42012 Z -55073).
+            int level = Math.min(own, openedTop(data, startX, startZ, x, z, scale));
             boolean step = false;
             int[] ox = {1, -1, 0, 0}, oz = {0, 0, 1, -1};
             for (int k = 0; k < 4; k++) {
@@ -153,7 +156,35 @@ public final class VolcanicSurfaces {
     }
 
     /** Deepest a live channel is sunk below its own ground to sit under its banks. */
-    private static final int TROUGH_MAX = 3;
+    private static final int TROUGH_MAX = 6;
+    /** Half-width (blocks) of the window that cuts bumps out of a channel's profile: rises up to about twice this long. */
+    private static final int BUMP_R = 3;
+
+    /**
+     * The channel's profile at (x, z) with bumps cut out: the highest, over the channel columns within {@link #BUMP_R},
+     * of the lowest channel ground within {@link #BUMP_R} of each (a morphological opening). Slopes and dips are kept;
+     * a rise narrower than the window is levelled. From the tiles only, so every chunk agrees.
+     */
+    private static int openedTop(HeightmapData data, int startX, int startZ, int x, int z, int scale) {
+        int best = Integer.MIN_VALUE;
+        for (int dz = -BUMP_R; dz <= BUMP_R; dz++) {
+            for (int dx = -BUMP_R; dx <= BUMP_R; dx++) {
+                int ax = x + dx, az = z + dz;
+                if (!isChannel(data, startX, startZ, ax, az)) continue;
+                int low = Integer.MAX_VALUE;
+                for (int ez = -BUMP_R; ez <= BUMP_R && low > best; ez++) {
+                    for (int ex = -BUMP_R; ex <= BUMP_R; ex++) {
+                        int bx = ax + ex, bz = az + ez;
+                        if (!isChannel(data, startX, startZ, bx, bz)) continue;
+                        int t = tileTop(data, startX, startZ, bx, bz, scale);
+                        if (t != Integer.MIN_VALUE && t < low) low = t;
+                    }
+                }
+                if (low != Integer.MAX_VALUE && low > best) best = low;
+            }
+        }
+        return best == Integer.MIN_VALUE ? Integer.MAX_VALUE : best;
+    }
 
     /** Whether block column (x, z) is a live lava channel or lava lake. */
     private static boolean isChannel(HeightmapData data, int startX, int startZ, int x, int z) {
