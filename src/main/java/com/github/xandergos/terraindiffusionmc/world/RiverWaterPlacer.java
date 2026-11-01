@@ -63,6 +63,7 @@ public final class RiverWaterPlacer {
         if (data == null || data.waterY == null) return;
 
         boolean freezeOn = TerrainDiffusionConfig.riverFreezeEnabled();
+        boolean snowyLakes = TerrainDiffusionConfig.snowyLakesFreeze();
         float freezeM = TerrainDiffusionConfig.riverFreezeHeightMetres();
         int freezeY = freezeM <= 0f ? Integer.MIN_VALUE
                 : HeightConverter.convertToMinecraftHeight((short) Math.min(freezeM, 30000f), Math.max(1, WorldScaleManager.getCurrentScale()));
@@ -87,6 +88,9 @@ public final class RiverWaterPlacer {
                 if (top == RiverCarver.NONE) continue;
 
                 boolean frozen = freezeOn && (freezeM > 0f ? top >= freezeY : frozenAround(data.biomeIds, lz, lx));
+                boolean isLake = data.waterIsLake != null && data.waterIsLake[lz][lx];
+                // A lake in a snowy biome freezes over: ice on the top layer only, liquid water under it (Calvin, Nov 1).
+                if (!frozen && isLake && snowyLakes && data.biomeIds != null && frozenAround(data.biomeIds, lz, lx)) frozen = true;
                 short bed = data.surfaceY != null ? data.surfaceY[lz][lx] : RiverCarver.NONE;
                 if (!sinks.isEmpty() && CaveWater.inSink(sinks, x, z)) {
                     // Water down to the bed, then let it pour into the shaft once the chunk loads.
@@ -99,7 +103,6 @@ public final class RiverWaterPlacer {
                     chunk.markPosForPostProcessing(pos);
                     continue;
                 }
-                boolean isLake = data.waterIsLake != null && data.waterIsLake[lz][lx];
                 // Find the ground under the water line. Whether the bed block itself is solid depends on
                 // how the terrain pass rounds, so just look for the first solid block from the top down.
                 int capY = bed != RiverCarver.NONE ? bed - 8 : top - 12;   // open this far below the bed = a cave

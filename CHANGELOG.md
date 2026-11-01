@@ -7,6 +7,7 @@
 - Lakes in high mountain basins can be as large as any other lake (they were kept to small ponds).
 - Streams follow the real downhill direction, wandering and joining like real drainage, instead of running in dead-straight parallel lines at 45 degrees on long even slopes.
 - Fewer streams in very dry mountains: the minimum runoff given to high ground now shrinks in deserts.
+- Lakes in snowy biomes freeze over: a layer of ice on top with liquid water under it (`rivers.freeze_snowy_lakes`, on by default).
 
 ### Fixes
 - Canyon ravines stop short of rivers and lakes instead of cutting under them, so rivers no longer cross a ravine on a plug of rock.
