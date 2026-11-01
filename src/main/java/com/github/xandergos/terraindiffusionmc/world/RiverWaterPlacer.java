@@ -89,8 +89,11 @@ public final class RiverWaterPlacer {
 
                 boolean frozen = freezeOn && (freezeM > 0f ? top >= freezeY : frozenAround(data.biomeIds, lz, lx));
                 boolean isLake = data.waterIsLake != null && data.waterIsLake[lz][lx];
-                // A lake in a snowy biome freezes over: ice on the top layer only, liquid water under it (Calvin, Nov 1).
-                if (!frozen && isLake && snowyLakes && data.biomeIds != null && frozenAround(data.biomeIds, lz, lx)) frozen = true;
+                // A lake in a snowy climate freezes over: ice on the top layer only, liquid water under it (Calvin, Nov 1).
+                // Decided by the climate's temperature, not the biome: the biomes along a mountain lake's shore and over
+                // its steep-sided bed are bare stony peaks (a slope class, not a climate), and their speckled edges left
+                // a band of open water round the shore and striped, chunk-sized holes in the ice (X 65024 Z 169157).
+                if (!frozen && isLake && snowyLakes && frozenLake(data, lz, lx, top)) frozen = true;
                 short bed = data.surfaceY != null ? data.surfaceY[lz][lx] : RiverCarver.NONE;
                 if (!sinks.isEmpty() && CaveWater.inSink(sinks, x, z)) {
                     // Water down to the bed, then let it pour into the shaft once the chunk loads.
@@ -401,6 +404,22 @@ public final class RiverWaterPlacer {
 
     private static boolean isFillable(BlockState st) {
         return !st.isAir() && st.getFluidState().isEmpty() && !st.is(Blocks.ICE) && st.canOcclude();
+    }
+
+    /** Mean annual temperature (degrees C) below which a lake freezes over. */
+    private static final int LAKE_FREEZE_C = 0;
+
+    /** Whether a lake column freezes over: the climate is below {@link #LAKE_FREEZE_C} (tiles without one: the biomes). */
+    private static boolean frozenLake(HeightmapData data, int lz, int lx, int waterTop) {
+        if (data.tempC != null) {
+            // The temperature is the ground's, before the lake was cut into it: brought to the water's surface at the
+            // standard lapse rate, so one lake doesn't freeze round its rim and stay open in its middle.
+            float metresPerBlock = 30f / WorldScaleManager.clampScale(WorldScaleManager.getCurrentScale());
+            float waterM = (waterTop - 63) * metresPerBlock;
+            float t = data.tempC[lz][lx] + 0.0065f * (data.heightmap[lz][lx] - waterM);
+            return t < LAKE_FREEZE_C;
+        }
+        return data.biomeIds != null && frozenAround(data.biomeIds, lz, lx);
     }
 
     /** Water only freezes well inside snowy biomes, so streams never ice up at the edge of the snow line. */

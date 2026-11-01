@@ -83,6 +83,11 @@ public final class LocalTerrainProvider {
          * go); null if the tile has none.
          */
         public byte[][] oceanTags;
+        /**
+         * Mean annual air temperature per column (degrees C, rounded; the climate's own field, no biome noise); null if
+         * the tile was built without a climate. Lakes freeze over below 0 (world.RiverWaterPlacer).
+         */
+        public byte[][] tempC;
 
         public HeightmapData(short[][] heightmap, short[][] biomeIds, int width, int height) {
             this.heightmap = heightmap;
@@ -1153,6 +1158,7 @@ public final class LocalTerrainProvider {
                 : null;
         HeightmapData data = buildHeightmapData(elevFlat, biomeFlat, H, W);
         data.oceanTags = blockTags1;
+        data.tempC = temperatureGrid(climate, H, W);
         if (ice != null) {
             data.iceTop = ice.iceTop();
             data.glacier = ice.kind();
@@ -1213,7 +1219,8 @@ public final class LocalTerrainProvider {
         // Upsample climate (6, nH, nW) → (6, H, W)
         float[] climate = upsampleClimate(climateNativeFlat, nH, nW, cropI1, cropJ1, H, W, scale, nH * scale, nW * scale);
 
-        float[] elevOut = addElevationNoise(elevSmooth, elevPadded, i1, j1, H, W, pixelSizeM);
+        float[] elevOut = addElevationNoise(elevSmooth, elevPadded, i1, j1, H, W, pixelSizeM,
+                lakeShoreWeight(elevSmooth, i1, j1, H, W, scale));
         TerraPerf.end("tile.shape", t0);
 
         t0 = TerraPerf.start();
@@ -1240,6 +1247,7 @@ public final class LocalTerrainProvider {
                 : null;
         HeightmapData data = buildHeightmapData(elevOut, biomeFlat, H, W);
         data.oceanTags = blockTagsUp;
+        data.tempC = temperatureGrid(climate, H, W);
         if (ice != null) {
             data.iceTop = ice.iceTop();
             data.glacier = ice.kind();
@@ -1725,8 +1733,80 @@ public final class LocalTerrainProvider {
     // Helpers
     // =========================================================================
 
+    /** Native pixels from a lake within which the elevation noise never lowers the ground, and over which that fades out. */
+    private static final float LAKE_SHORE_FULL_PX = 2f, LAKE_SHORE_FADE_PX = 2f;
+
+    /**
+     * Per block, how far (1 near, 0 away) the elevation noise is kept from digging below the model's ground around a
+     * lake. A lake's level is its basin's rim at native resolution; the block-level noise (up to ~28 m on slopes at scale
+     * 6) cut dips through that rim, so stretches of a lake stood a few blocks above the ground right outside it, a
+     * raised sheet of water with a step at its edge (Calvin, Nov 1, X 64800 Z 169260: ground 1-3 blocks under the
+     * water all round a large mountain lake). Only the noise's downward part is held back, so the rim keeps at least
+     * the model's height and the shore still varies. Null when rivers are off or no lake is near. Lakes come from the
+     * same river regions the carver uses, measured between native pixel centres and interpolated onto the blocks.
+     */
+    float[] lakeShoreWeight(float[] elev, int i1, int j1, int H, int W, int scale) {
+        if (!TerrainDiffusionConfig.riversEnabled()) return null;
+        boolean land = false;
+        for (float e : elev) if (e > 0f) { land = true; break; }
+        if (!land) return null;
+        try {
+            int R = (int) Math.ceil(LAKE_SHORE_FULL_PX + LAKE_SHORE_FADE_PX) + 1;
+            int pi0 = Math.floorDiv(i1, scale) - R - 1, pj0 = Math.floorDiv(j1, scale) - R - 1;
+            int pi1 = Math.floorDiv(i1 + H - 1, scale) + R + 1, pj1 = Math.floorDiv(j1 + W - 1, scale) + R + 1;
+            int nh = pi1 - pi0 + 1, nw = pj1 - pj0 + 1;
+            boolean[] lake = new boolean[nh * nw];
+            boolean any = false;
+            RiverService svc = rivers();
+            RiverService.Source source = (a, b, c, d) -> pipeline.get(a, b, c, d, true);
+            for (int r = 0; r < nh; r++)
+                for (int c = 0; c < nw; c++) {
+                    RiverService.Region reg = svc.regionOfPixel(pi0 + r, pj0 + c, source);
+                    int k = reg.index(pi0 + r, pj0 + c);
+                    if (k >= 0 && reg.cls[k] == com.github.xandergos.terraindiffusionmc.hydrology.RiverMap.LAKE) {
+                        lake[r * nw + c] = true;
+                        any = true;
+                    }
+                }
+            if (!any) return null;
+            float[] wN = new float[nh * nw];
+            for (int r = 0; r < nh; r++)
+                for (int c = 0; c < nw; c++) {
+                    if (!lake[r * nw + c]) continue;
+                    for (int a = Math.max(0, r - R); a <= Math.min(nh - 1, r + R); a++)
+                        for (int b = Math.max(0, c - R); b <= Math.min(nw - 1, c + R); b++) {
+                            float d = (float) Math.hypot(a - r, b - c);
+                            float w = d <= LAKE_SHORE_FULL_PX ? 1f
+                                    : Math.max(0f, 1f - (d - LAKE_SHORE_FULL_PX) / LAKE_SHORE_FADE_PX);
+                            if (w > wN[a * nw + b]) wN[a * nw + b] = w;
+                        }
+                }
+            float[] out = new float[H * W];
+            boolean anyOut = false;
+            for (int r = 0; r < H; r++) {
+                float fi = (i1 + r + 0.5f) / scale - 0.5f - pi0;
+                int a0 = (int) Math.floor(fi);
+                float ti = fi - a0;
+                for (int c = 0; c < W; c++) {
+                    float fj = (j1 + c + 0.5f) / scale - 0.5f - pj0;
+                    int b0 = (int) Math.floor(fj);
+                    float tj = fj - b0;
+                    int a1 = Math.min(nh - 1, a0 + 1), b1 = Math.min(nw - 1, b0 + 1);
+                    float v = (1 - ti) * ((1 - tj) * wN[a0 * nw + b0] + tj * wN[a0 * nw + b1])
+                            + ti * ((1 - tj) * wN[a1 * nw + b0] + tj * wN[a1 * nw + b1]);
+                    out[r * W + c] = v;
+                    anyOut |= v > 0f;
+                }
+            }
+            return anyOut ? out : null;
+        } catch (RuntimeException e) {
+            LOG.warn("[Orogeny] lake shore weights failed for tile x={} z={}: {}", j1, i1, e.toString());
+            return null;
+        }
+    }
+
     private float[] addElevationNoise(float[] elevSmooth, float[] elevPadded,
-                                       int i1, int j1, int H, int W, float pixelSizeM) {
+                                       int i1, int j1, int H, int W, float pixelSizeM, float[] shoreWeight) {
         float[] slopeGradient = sobelGradient(elevPadded, H + 2, W + 2, H, W);
         float[] elevOut = elevSmooth.clone();
         float normFactor = 40f * pixelSizeM / NATIVE_RESOLUTION;
@@ -1744,9 +1824,11 @@ public final class LocalTerrainProvider {
                 sf = sf * sf * (float) Math.sqrt(sf);
 
                 float nx = j1 + c, ny = i1 + r;
-                elevOut[idx] = e
-                        + ELEV_NOISE_COARSE.GetNoise(nx, ny) * ampC * sf
+                float noise = ELEV_NOISE_COARSE.GetNoise(nx, ny) * ampC * sf
                         + ELEV_NOISE_FINE.GetNoise(nx, ny)   * ampF * sf;
+                // Around lakes the noise only raises the ground (see lakeShoreWeight).
+                if (noise < 0f && shoreWeight != null) noise *= 1f - shoreWeight[idx];
+                elevOut[idx] = e + noise;
             }
         }
         return elevOut;
@@ -1805,6 +1887,16 @@ public final class LocalTerrainProvider {
         float[][] a = new float[H][W];
         for (int r = 0; r < H; r++) System.arraycopy(flat, r * W, a[r], 0, W);
         return a;
+    }
+
+    /** The climate's temperature channel per column, rounded to whole degrees C (see {@link HeightmapData#tempC}). */
+    private static byte[][] temperatureGrid(float[] climate, int H, int W) {
+        if (climate == null || climate.length < H * W) return null;
+        byte[][] t = new byte[H][W];
+        for (int r = 0; r < H; r++)
+            for (int c = 0; c < W; c++)
+                t[r][c] = (byte) Math.max(-128, Math.min(127, Math.round(climate[r * W + c])));
+        return t;
     }
 
     private static HeightmapData buildHeightmapData(float[] elevFlat, short[] biomeFlat, int H, int W) {

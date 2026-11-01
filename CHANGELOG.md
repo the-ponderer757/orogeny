@@ -7,7 +7,8 @@
 - Lakes in high mountain basins can be as large as any other lake (they were kept to small ponds).
 - Streams follow the real downhill direction, wandering and joining like real drainage, instead of running in dead-straight parallel lines at 45 degrees on long even slopes.
 - Fewer streams in very dry mountains: the minimum runoff given to high ground now shrinks in deserts.
-- Lakes in snowy biomes freeze over: a layer of ice on top with liquid water under it (`rivers.freeze_snowy_lakes`, on by default).
+- Lakes in cold climates (mean temperature below 0 °C at the water) freeze over: a layer of ice on top with liquid water under it (`rivers.freeze_snowy_lakes`, on by default).
+- Large lakes no longer stand a few blocks above the ground along their shores: the small-scale terrain noise is kept from cutting dips through a lake's rim.
 - Axolotls only in lakes above 4,500 m (was 3,000 m).
 
 ### Configuration
