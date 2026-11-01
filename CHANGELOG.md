@@ -38,3 +38,9 @@ First public release of Orogeny, a fork of [Terrain Diffusion](https://github.co
 - `/orogeny-explore`: browser map with relief, elevation, climate, rivers, biomes and caves views.
 - `/orogeny-find`: teleport to the nearest biome, cave or landmark.
 - Tiles around you are built ahead of time (`performance.prefetch_tiles`); prioritised inference queue; faster cave field.
+
+### Inspiration
+Several biomes and caves are inspired by other mods' designs and rebuilt from vanilla blocks to fit Orogeny's terrain. No code or assets from those mods are included.
+- **[Terralith](https://modrinth.com/datapack/terralith)** by Stardust Labs: birch taiga, Siberian grove and taiga, forested and temperate highlands, steppe, painted mountains, white cliffs, desert oasis, blooming plateau and valley, lush valley, mirage isles, volcanoes and shield volcanoes, Yellowstone, Yosemite cliffs and lowlands; andesite, diorite, granite, tuff, frostfire, fungal, infested, thermal and mantle caves, and the underground jungle.
+- **[William Wythers' Overhauled Overworld](https://modrinth.com/datapack/wwoo)**: cherry grove, boreal forest, taiga mountain, taiga clearing, autumnal forest (in the dappled forest), geothermal basins, tropical atolls; the deep dark forest and deep dark incursion caves.
+- Also Biomes O' Plenty (redwoods, crystalline chasm, spider nest) and Darker Depths (molten cavern).
