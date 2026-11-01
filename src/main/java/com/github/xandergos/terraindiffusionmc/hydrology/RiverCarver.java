@@ -55,8 +55,25 @@ public final class RiverCarver {
     private static final int STEP_CUT_MAX = 4;
     /** Water-level drop allowed per block along the channel inside one cross-section (see the one-level pass). */
     private static final float STEEP_ALLOW = 2f;
-    /** Most a dry hole in a channel may stand over the water around it and still be filled (see the hole pass). */
-    private static final int HOLE_MAX = 4;
+    /** Deepest a rock fin (at most two columns thick) between two reaches of a channel is cut (see the hole pass). */
+    private static final int FIN_MAX = 24;
+
+    /**
+     * Steps (1 or 2) from (r, c) along {@code step} (an index offset) to the first stream or river water, crossing at
+     * most one dry column on the way, or -1 if there is none that close (or it is lake water, or the tile ends).
+     */
+    private static int waterAlong(short[][] waterY, boolean[] lakeCol, int H, int W, int r, int c, int step) {
+        int idx = r * W + c;
+        for (int k = 1; k <= 2; k++) {
+            int j = idx + k * step;
+            if (j < 0 || j >= H * W) return -1;
+            if (step == 1 || step == -1) {
+                if (j / W != r) return -1;   // ran off the row
+            }
+            if (waterY[j / W][j % W] != NONE) return lakeCol[j] ? -1 : k;
+        }
+        return -1;
+    }
     /** Distance (blocks) from the channel edge over which banks are shaped. */
     private static final float BANK = 4f;   // how far a stream reshapes the ground beside it (was 8: diagonal steps reached too far)
     /** Bank rise per block of distance from the channel edge. */
@@ -1719,8 +1736,8 @@ public final class RiverCarver {
             }
         }
 
-        // Holes in a channel: a dry column with stream or river water on two opposite sides, its ground at most
-        // HOLE_MAX blocks over the lower of them, is part of the channel that one of the passes above left out (a step
+        // Holes in a channel: a dry column with stream or river water on two opposite sides (or across a thin fin, see
+        // below), its ground at most FIN_MAX blocks over the lower of them, is part of the channel that one of the passes above left out (a step
         // the cross-section rules dropped, a skipped steep column): it stood as a stone pillar or a dry rib across a
         // cascade (Calvin, Nov 1, X -25542 Z 48855). Fill it at that level, as long as its other two sides hold the water
         // (water, or ground at least that high). Lakes are left alone (their dry patches are flush shore on purpose).
@@ -1733,16 +1750,22 @@ public final class RiverCarver {
                     int top = surfaceY[r][c] != NONE ? surfaceY[r][c] : ytop[idx];
                     if (top < SEA_SURFACE_Y) continue;
                     int best = Integer.MAX_VALUE;
-                    int[][] pairs = {{idx - W, idx + W, idx - 1, idx + 1}, {idx - 1, idx + 1, idx - W, idx + W}};
-                    for (int[] pr : pairs) {
-                        int a = pr[0], b = pr[1];
-                        int wa = waterY[a / W][a % W], wb = waterY[b / W][b % W];
-                        if (wa == NONE || wb == NONE || lakeCol[a] || lakeCol[b]) continue;
-                        int lvl = Math.min(wa, wb);
-                        if (top - lvl > HOLE_MAX) continue;
+                    // Along each axis: the nearest water either way within two steps. A dry column with water right on
+                    // both sides, or one of two across a rock fin, is part of the channel: at a jog down a step the fin
+                    // split the stream into two reaches with a wall between (Calvin, Nov 1, X -174940 Z 70263). The fin
+                    // is cut down to the lower reach, up to FIN_MAX deep, so the upper reach pours into it as a waterfall.
+                    int[][] axes = {{W, 1}, {1, W}};
+                    for (int[] ax : axes) {
+                        int step = ax[0], side = ax[1];
+                        int a = waterAlong(waterY, lakeCol, H, W, r, c, -step);
+                        int b = waterAlong(waterY, lakeCol, H, W, r, c, step);
+                        if (a < 0 || b < 0) continue;
+                        int ia = idx - a * step, ib = idx + b * step;
+                        int lvl = Math.min(waterY[ia / W][ia % W], waterY[ib / W][ib % W]);
+                        int limit = FIN_MAX;   // (a one-column fin too: cutting only one of two left the other standing)
+                        if (top - lvl > limit) continue;
                         boolean held = true;
-                        for (int k = 2; k < 4 && held; k++) {
-                            int s2 = pr[k];
+                        for (int s2 : new int[]{idx - side, idx + side}) {
                             if (waterY[s2 / W][s2 % W] != NONE) continue;
                             int g2 = surfaceY[s2 / W][s2 % W] != NONE ? surfaceY[s2 / W][s2 % W] : ytop[s2];
                             if (g2 < lvl) held = false;
