@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 (Minecraft 26.3)
+
+### Fixes
+- Canyon ravines stop short of rivers and lakes instead of cutting under them, so rivers no longer cross a ravine on a plug of rock.
+
 ## 1.0.2 (Minecraft 26.3)
 
 ### Fixes

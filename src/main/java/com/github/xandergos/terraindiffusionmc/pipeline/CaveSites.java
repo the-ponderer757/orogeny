@@ -196,7 +196,7 @@ public final class CaveSites {
         float v = ((h >>> 16) & 0xFFFF) / 65536f;
         float w = ((h >>> 8) & 0xFF) / 256f;
         switch (id) {
-            case CaveBiomes.CANYON_RAVINE: return ravine(ax, az, ground, u, v, w, h);
+            case CaveBiomes.CANYON_RAVINE: return ravine(ax, az, ground, u, v, w, h, surface);
             case CaveBiomes.DEEP_SHAFT: return pit(ax, az, ground, u, v, w);
             case CaveBiomes.SINKHOLE_JUNGLE: return dome(ax, az, ground, u, v, w);
             case CaveBiomes.BLUE_HOLE: return blueHole(ax, az, ground, u, v, w);
@@ -249,9 +249,31 @@ public final class CaveSites {
      * A canyon ravine: 180-340 blocks long, 18-40 wide at the top, 90-180 deep, wandering, narrowing downwards. Most
      * get a natural bridge or two: a stone arch spanning the ravine somewhere in its middle half.
      */
-    static Cut ravine(int ax, int az, int ground, float u, float v, float w, long h) {
+    static Cut ravine(int ax, int az, int ground, float u, float v, float w, long h, CaveBiomes.Surface surface) {
         float angle = (float) (u * Math.PI);
         float length = 180f + v * 160f, halfWidth = 9f + w * 11f;
+        float wiggle = 8f + 12f * w, wiggleLen = 50f + 50f * v, phase = v * 6.28f;
+        // Rivers and lakes (Calvin, Nov 1, X 36191 Z 20598: a river crossing a ravine was held up on a plug of rock
+        // across the chasm): the ravine stops short of the nearest water along it, its tapered end
+        // RAVINE_WATER_GAP blocks clear; too short then and there is no ravine.
+        float cos = (float) Math.cos(angle), sin = (float) Math.sin(angle);
+        float reach = length / 2f;
+        for (float a = 0f; a <= length / 2f && a < reach; a += 4f) {
+            for (int side = -1; side <= 1; side += 2) {
+                float aa = side * a;
+                float mid = wiggle * (float) Math.sin(aa / wiggleLen + phase);
+                for (float b = -halfWidth - RAVINE_WATER_GAP; b <= halfWidth + RAVINE_WATER_GAP; b += 4f) {
+                    float bb = b + mid;
+                    int x = ax + Math.round(aa * cos - bb * sin), z = az + Math.round(aa * sin + bb * cos);
+                    if (surface.inlandWater(x, z) != Integer.MIN_VALUE) {
+                        reach = Math.min(reach, a - RAVINE_WATER_GAP);
+                        break;
+                    }
+                }
+            }
+        }
+        if (reach < RAVINE_MIN_LENGTH / 2f) return null;
+        length = Math.min(length, 2f * reach);
         int bottom = Math.max(CUT_FLOOR_Y, ground - 90 - (int) (u * 90f));
         float b1 = Float.NaN, b2 = Float.NaN, y1 = 0f, y2 = 0f;
         float r0 = unit(h, 3), r1 = unit(h, 13), r2 = unit(h, 23), r3 = unit(h, 33), r4 = unit(h, 43);
@@ -264,9 +286,12 @@ public final class CaveSites {
                 y2 = 0.42f + 0.33f * r3;
             }
         }
-        return new Ravine(ax, az, (float) Math.cos(angle), (float) Math.sin(angle), length, halfWidth, bottom, ground,
-                8f + 12f * w, 50f + 50f * v, v * 6.28f, b1, y1, b2, y2, 3f + 3f * r4);
+        return new Ravine(ax, az, cos, sin, length, halfWidth, bottom, ground,
+                wiggle, wiggleLen, phase, b1, y1, b2, y2, 3f + 3f * r4);
     }
+
+    /** Clearance (blocks) between a ravine and any river or lake, and the shortest ravine kept after stopping short of one. */
+    public static float RAVINE_WATER_GAP = 12f, RAVINE_MIN_LENGTH = 120f;
 
     /**
      * A canyon ravine and its natural bridges: bridge k stands at {@code bk} along the ravine's axis (NaN for none),
