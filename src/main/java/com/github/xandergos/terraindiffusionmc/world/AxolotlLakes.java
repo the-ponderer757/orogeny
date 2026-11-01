@@ -18,7 +18,7 @@ import net.minecraft.world.level.material.FluidState;
  * <p>In a Terra world an axolotl can spawn naturally in lake water that is
  * <ul>
  *   <li>high up: at least {@link #ALPINE_METRES} real-world metres, so the Y level it needs depends on the world scale
- *       (Y 663 at scale 6, Y 263 at scale 2, Y 163 at scale 1);</li>
+ *       (Y 963 at scale 6, Y 363 at scale 2, Y 213 at scale 1);</li>
  *   <li>in an "axolotl chunk": like slime chunks, a fixed random set of chunks from the world seed, but rarer
  *       (one chunk in {@link #CHUNK_RARITY}; slime chunks are one in 10);</li>
  *   <li>part of a lake, not a stream: still water across most of an 11x11 area at the water's surface.</li>
@@ -27,7 +27,7 @@ import net.minecraft.world.level.material.FluidState;
  */
 public final class AxolotlLakes {
     /** Lake water must be at least this high, in real-world metres. */
-    public static final short ALPINE_METRES = 3000;
+    public static final short ALPINE_METRES = 4500;   // Nov 1: 3000 -> 4500 (Calvin)
     /** One chunk in this many is an axolotl chunk. */
     public static final int CHUNK_RARITY = 25;
     /** Mixed into the chunk's random seed so axolotl chunks are not the slime chunks. */
