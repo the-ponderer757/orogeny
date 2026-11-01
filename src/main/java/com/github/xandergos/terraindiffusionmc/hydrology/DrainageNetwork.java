@@ -1,8 +1,8 @@
 package com.github.xandergos.terraindiffusionmc.hydrology;
 
 /**
- * Drainage network on a regular grid: depression filling (priority-flood), D8 flow directions
- * and runoff-weighted flow accumulation.
+ * Drainage network on a regular grid: depression filling (priority-flood), flow directions (Rho8 on sloping ground,
+ * see {@link #route}) and runoff-weighted flow accumulation.
  *
  * <p>Pure Java with no Minecraft dependencies so it can be unit-tested on synthetic terrain.
  *
@@ -60,6 +60,16 @@ public final class DrainageNetwork {
      */
     public static DrainageNetwork compute(float[] elev, float[] runoff, int height, int width,
                                           float seaLevel, boolean edgesAreOutlets, boolean[] sinks) {
+        return compute(elev, runoff, height, width, seaLevel, edgesAreOutlets, sinks, Integer.MIN_VALUE, 0);
+    }
+
+    /**
+     * As {@link #compute(float[], float[], int, int, float, boolean, boolean[])}, with the window's first row and column
+     * in world pixels (i0, j0): flow directions on sloping ground are then chosen by {@link #route} from the world
+     * position, so overlapping windows agree. With i0 = Integer.MIN_VALUE every cell drains to its lowest neighbour.
+     */
+    public static DrainageNetwork compute(float[] elev, float[] runoff, int height, int width,
+                                          float seaLevel, boolean edgesAreOutlets, boolean[] sinks, int i0, int j0) {
         final int n = height * width;
         float[] filled = new float[n];
         int[] downstream = new int[n];
@@ -120,6 +130,8 @@ public final class DrainageNetwork {
             }
         }
 
+        if (i0 != Integer.MIN_VALUE) route(filled, dep, downstream, order, popped, height, width, i0, j0);
+
         // Cells were popped in non-decreasing filled order and every cell is popped after its
         // downstream cell, so walking the pop order backwards visits all upstream cells first.
         float[] discharge = new float[n];
@@ -130,6 +142,60 @@ public final class DrainageNetwork {
             if (d >= 0) discharge[d] += discharge[i];
         }
         return new DrainageNetwork(height, width, downstream, discharge, filled, dep);
+    }
+
+    private static final float DIAG = (float) Math.sqrt(2);
+    /** The 8 facets: cardinal neighbour (dr, dc), then the diagonal neighbour beside it. */
+    private static final int[][] FACETS = {
+            {0, 1, -1, 1}, {0, 1, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, -1},
+            {0, -1, 1, -1}, {0, -1, -1, -1}, {-1, 0, -1, -1}, {-1, 0, -1, 1}};
+
+    /**
+     * Flow directions on sloping ground by Rho8 (Fairfield and Leymarie 1991) over Tarboton's facets. The flood's own
+     * parent is the lowest neighbour, which on a plane is a diagonal for any slope that isn't exactly along a grid axis
+     * (a diagonal drops by up to sqrt 2 times more): every stream on a long even slope ran dead straight at 45 degrees,
+     * side by side without meeting (Calvin, Nov 1, a dry coastal range). Here the true downhill direction is taken
+     * from the steepest of the eight triangular facets round the cell, between its cardinal and diagonal neighbour,
+     * and the cell drains to the diagonal with probability (angle from the cardinal) / 45 degrees, from a hash of the
+     * world position: on average streams follow the real slope, wandering and meeting as on real hillsides. Only
+     * neighbours popped before the cell are taken (so the order stays valid for accumulation and no loops form);
+     * flats and filled depressions keep the flood's paths.
+     */
+    private static void route(float[] filled, boolean[] dep, int[] downstream, int[] order, int popped, int H, int W,
+                              int i0, int j0) {
+        int n = H * W;
+        int[] pos = new int[n];
+        java.util.Arrays.fill(pos, Integer.MAX_VALUE);
+        for (int t = 0; t < popped; t++) pos[order[t]] = t;
+        for (int i = 0; i < n; i++) {
+            if (downstream[i] < 0 || dep[i]) continue;
+            int r = i / W, c = i % W;
+            float e0 = filled[i];
+            float best = 0f, angle = 0f;
+            int bestF = -1;
+            for (int f = 0; f < 8; f++) {
+                int r1 = r + FACETS[f][0], c1 = c + FACETS[f][1], r2 = r + FACETS[f][2], c2 = c + FACETS[f][3];
+                if (r1 < 0 || r1 >= H || c1 < 0 || c1 >= W || r2 < 0 || r2 >= H || c2 < 0 || c2 >= W) continue;
+                float e1 = filled[r1 * W + c1], e2 = filled[r2 * W + c2];
+                float s1 = e0 - e1, s2 = e1 - e2;
+                float a = (float) Math.atan2(s2, s1), sl;
+                if (a <= 0f) { a = 0f; sl = s1; }
+                else if (a >= (float) (Math.PI / 4)) { a = (float) (Math.PI / 4); sl = (e0 - e2) / DIAG; }
+                else sl = (float) Math.sqrt(s1 * s1 + s2 * s2);
+                if (sl > best) { best = sl; angle = a; bestF = f; }
+            }
+            if (bestF < 0) continue;
+            int x = j0 + c, z = i0 + r;
+            int h = x * 0x9E3779B1 ^ z * 0x85EBCA6B;
+            h ^= h >>> 15; h *= 0x2C1B3C6D; h ^= h >>> 12; h *= 0x297A2D39; h ^= h >>> 15;
+            boolean diag = (h & 0xFFFF) / 65536f < angle / (float) (Math.PI / 4);
+            int[] fc = FACETS[bestF];
+            int a1 = (r + fc[0]) * W + c + fc[1], a2 = (r + fc[2]) * W + c + fc[3];
+            int pick = diag ? a2 : a1, other = diag ? a1 : a2;
+            if (pos[pick] < pos[i] && filled[pick] < e0) downstream[i] = pick;
+            else if (pos[other] < pos[i] && filled[other] < e0) downstream[i] = other;
+            // else: keep the flood's parent
+        }
     }
 
     /**

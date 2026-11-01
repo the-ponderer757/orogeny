@@ -192,8 +192,11 @@ public final class RiverMap {
                 float ro = Math.max(0.05f, Math.min(3f, precip / 800f));
                 // Mountains wring rain and snowmelt out of the air even in a dry climate, so high ground never yields
                 // less than a moderate runoff (otherwise whole mountain valleys in dry regions had no streams at all).
-                if (e > 1500f) ro = Math.max(ro, 0.35f);
-                else if (e > 700f) ro = Math.max(ro, 0.2f);
+                // The floor itself shrinks in a desert (Calvin, Nov 1: a hyper-arid coastal range was combed with
+                // streams): full at 280 mm a year, about 60 % at 100 mm, a third at 30 mm.
+                float dry = (float) Math.sqrt(Math.min(1f, precip / 280f));
+                if (e > 1500f) ro = Math.max(ro, 0.35f * dry);
+                else if (e > 700f) ro = Math.max(ro, 0.2f * dry);
                 // Fresh volcanic rock is porous: rain sinks into it, so streams are not born on a volcano's cone or its
                 // lava flows (they burst out at the rock's edge as full streams, a wide sheet of water against the
                 // rock, Calvin, Nov 1, X -42141 Z -55754). Water flowing in from outside still runs through.
@@ -202,7 +205,7 @@ public final class RiverMap {
             }
         }
 
-        DrainageNetwork net = DrainageNetwork.compute(routing, runoff, H, W, 0f, true);
+        DrainageNetwork net = DrainageNetwork.compute(routing, runoff, H, W, 0f, true, null, i0, j0);
         boolean[] lake = new boolean[n];
         boolean[] seen = new boolean[n];
         int[] stack = new int[n];
@@ -233,7 +236,7 @@ public final class RiverMap {
                 if (!sinks[pit]) { sinks[pit] = true; spill[pit] = net.filled[pit]; added = true; }
             }
             if (!added) break;
-            net = DrainageNetwork.compute(routing, runoff, H, W, 0f, true, sinks);
+            net = DrainageNetwork.compute(routing, runoff, H, W, 0f, true, sinks, i0, j0);
         }
         float[] q = net.limitedDischarge(runoff, p.flowSteps);
         byte[] out = new byte[n];

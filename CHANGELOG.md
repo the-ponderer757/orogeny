@@ -5,6 +5,8 @@
 ### Rivers and lakes
 - Water reaches higher: rivers and lakes now form up to 6,000 m of terrain height (was 4,000 m; `rivers.max_water_m`). An existing `config/orogeny.properties` keeps its old value until you change it.
 - Lakes in high mountain basins can be as large as any other lake (they were kept to small ponds).
+- Streams follow the real downhill direction, wandering and joining like real drainage, instead of running in dead-straight parallel lines at 45 degrees on long even slopes.
+- Fewer streams in very dry mountains: the minimum runoff given to high ground now shrinks in deserts.
 
 ### Fixes
 - Canyon ravines stop short of rivers and lakes instead of cutting under them, so rivers no longer cross a ravine on a plug of rock.
