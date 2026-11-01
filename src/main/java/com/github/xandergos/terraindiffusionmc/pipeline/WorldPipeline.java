@@ -944,7 +944,7 @@ public final class WorldPipeline implements AutoCloseable {
         }
         // Landforms (biomes plan v1.4): carved after the ocean features, before the climate, so the lapse rate, rivers
         // and biomes all follow them.
-        // Hot ground of active volcanoes, for the hydrology (no lakes beside a live crater; RiverMap#computeFull).
+        // Volcanic ground for the hydrology (no lakes beside a live crater, no runoff off porous rock; RiverMap#computeFull).
         float[] hot = null;
         if (TerrainDiffusionConfig.volcanoes()) {
             List<double[]> vents = TerrainDiffusionConfig.oceanFeatures()
@@ -952,11 +952,31 @@ public final class WorldPipeline implements AutoCloseable {
             byte[] lt = tagsOut != null ? tagsOut : withClimate ? new byte[H * W] : null;
             landforms.apply(elevFlat, i1, j1, H, W, lt, vents);
             if (withClimate) {
+                // 2: an active volcano's hot ground; 1: other fresh volcanic rock (cone, crater, lava flows).
                 for (int k = 0; k < H * W; k++) {
                     byte t = lt[k];
-                    if (t != Landforms.TAG_LAVA_LAKE && t != Landforms.TAG_HOT_CRATER && t != Landforms.TAG_LAVA_CHANNEL) continue;
+                    float v = t == Landforms.TAG_LAVA_LAKE || t == Landforms.TAG_HOT_CRATER || t == Landforms.TAG_LAVA_CHANNEL ? 2f
+                            : t == Landforms.TAG_LAVA || t == Landforms.TAG_VOLCANO || t == Landforms.TAG_CRATER ? 1f : 0f;
+                    if (v == 0f) continue;
                     if (hot == null) hot = new float[H * W];
-                    hot[k] = 1f;
+                    hot[k] = v;
+                }
+                // An active island volcano's cone is drawn by the model and carries no tags outside its crater: count
+                // the ground within ISLAND_CONE crater radii of the vent as volcanic rock too.
+                if (vents != null) {
+                    for (double[] v : vents) {
+                        double rc = v[5] * ISLAND_CONE;
+                        int r0 = Math.max(0, (int) Math.floor(v[0] - rc) - i1), r1 = Math.min(H - 1, (int) Math.ceil(v[0] + rc) - i1);
+                        int c0 = Math.max(0, (int) Math.floor(v[1] - rc) - j1), c1 = Math.min(W - 1, (int) Math.ceil(v[1] + rc) - j1);
+                        for (int r = r0; r <= r1; r++)
+                            for (int c = c0; c <= c1; c++) {
+                                if (Math.hypot(i1 + r + 0.5 - v[0], j1 + c + 0.5 - v[1]) >= rc) continue;
+                                int k = r * W + c;
+                                if (elevFlat[k] <= 0f) continue;
+                                if (hot == null) hot = new float[H * W];
+                                if (hot[k] < 1f) hot[k] = 1f;
+                            }
+                    }
                 }
             }
         }
@@ -964,6 +984,9 @@ public final class WorldPipeline implements AutoCloseable {
         float[] climate = withClimate ? computeClimate(i1, j1, i2, j2, elevFlat, H, W) : null;
         return hot == null ? new float[][]{elevFlat, climate} : new float[][]{elevFlat, climate, hot};
     }
+
+    /** Crater radii around an active island vent counted as porous volcanic rock for the hydrology. */
+    private static final double ISLAND_CONE = 3.5;
 
     /** Rift sea drowning: low ground (fully below the first, untouched above the second, metres) and floor depth. */
     private static final float RIFT_LOW_M = 60f, RIFT_HIGH_M = 220f, RIFT_SHELF_M = 30f, RIFT_FLOOR_M = 250f;

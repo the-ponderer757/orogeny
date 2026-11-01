@@ -89,11 +89,11 @@ public final class RiverMap {
         // Hot ground grown by the gap (Chebyshev), as two separable passes.
         boolean any = false;
         boolean[] rowGrown = new boolean[n];
-        for (int i = 0; i < n && !any; i++) any = hot[i] != 0f;
+        for (int i = 0; i < n && !any; i++) any = hot[i] >= 2f;
         if (!any) return;
         for (int r = 0; r < H; r++)
             for (int c = 0; c < W; c++) {
-                if (hot[r * W + c] == 0f) continue;
+                if (hot[r * W + c] < 2f) continue;
                 for (int cc = Math.max(0, c - g); cc <= Math.min(W - 1, c + g); cc++) rowGrown[r * W + cc] = true;
             }
         boolean[] near = new boolean[n];
@@ -130,10 +130,12 @@ public final class RiverMap {
 
     /** Native pixels from an active volcano's hot ground within which no lake is kept (see {@link #computeFull}). */
     static final int HOT_LAKE_GAP = 4;
+    /** Share of the rain that runs off fresh volcanic rock. */
+    static final float POROUS_RUNOFF = 0.03f;
 
     /**
-     * @param hot per pixel, non-zero on an active volcano's hot ground (lava lake, hot crater, live lava channel), or
-     *            null. A lake within {@link #HOT_LAKE_GAP} pixels of it is dropped whole: the hydrology ponded the
+     * @param hot per pixel, 2 on an active volcano's hot ground (lava lake, hot crater, live lava channel), 1 on other
+     *            fresh volcanic rock (almost no runoff there), 0 elsewhere, or null. A lake within {@link #HOT_LAKE_GAP} pixels of it is dropped whole: the hydrology ponded the
      *            hollows of the crater and its rim, and only the part on the hot ground itself was taken out later, so
      *            half-lakes stood beside the crater with walls of water (Calvin, Nov 1, an island volcano). Decided on
      *            the region's data, so every tile sees the same lakes.
@@ -158,6 +160,10 @@ public final class RiverMap {
                 // less than a moderate runoff (otherwise whole mountain valleys in dry regions had no streams at all).
                 if (e > 1500f) ro = Math.max(ro, 0.35f);
                 else if (e > 700f) ro = Math.max(ro, 0.2f);
+                // Fresh volcanic rock is porous: rain sinks into it, so streams are not born on a volcano's cone or its
+                // lava flows (they burst out at the rock's edge as full streams, a wide sheet of water against the
+                // rock, Calvin, Nov 1, X -42141 Z -55754). Water flowing in from outside still runs through.
+                if (hot != null && hot[i] >= 1f) ro *= POROUS_RUNOFF;
                 runoff[i] = ro;
             }
         }
