@@ -1676,13 +1676,24 @@ public final class LocalTerrainProvider {
         }
     }
 
-    /** Rivers and lakes run under a glacier's ice, not through it: no water where ice lies (the river leaves the snout). */
+    /**
+     * Rivers run under a glacier's ice, not through it: no river water where ice lies (the river leaves the snout).
+     * Lakes win over ice: the glacier ends at the lake's shore.
+     */
     private static void noWaterUnderIce(HeightmapData data) {
         if (data.glacier == null || data.waterY == null) return;
         for (int r = 0; r < data.height; r++) {
             for (int c = 0; c < data.width; c++) {
                 byte g = data.glacier[r][c];
                 if (g != GlacierShaper.ICE_SNOW && g != GlacierShaper.ICE_BARE) continue;
+                if (data.waterY[r][c] != RiverCarver.NONE && data.waterIsLake != null && data.waterIsLake[r][c]) {
+                    // A lake keeps its water and the ice gives way: ice laid over a lake's columns stood as islands of
+                    // snow and packed ice with sheer sides, several blocks over the water (Calvin, Nov 1, X -174386
+                    // Z 70421). The glacier ends at the shore instead.
+                    data.glacier[r][c] = GlacierShaper.NONE;
+                    if (data.iceTop != null) data.iceTop[r][c] = GlacierShaper.NO_ICE;
+                    continue;
+                }
                 data.waterY[r][c] = RiverCarver.NONE;
                 if (data.waterIsLake != null) data.waterIsLake[r][c] = false;
             }
