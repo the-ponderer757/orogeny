@@ -401,7 +401,8 @@ public final class Landforms {
             long lh = mix(h + 100 + l);
             double ang = 2 * Math.PI * unit(mix(lh + 1));
             double len = (0.6 + 0.7 * unit(mix(lh + 2))) * radius;
-            lobes.add(new Lobe(cz, cx, ang, 0.25 * radius, len, 7 + 6 * unit(mix(lh + 3)), 0.14 + 0.14 * unit(mix(lh + 4)),
+            // Flows pour from the crater's rim (they began a quarter of the way down the cone, cut off from the crater).
+            lobes.add(new Lobe(cz, cx, ang, 1.05 * craterR, len, 7 + 6 * unit(mix(lh + 3)), 0.14 + 0.14 * unit(mix(lh + 4)),
                     3 + 5 * unit(mix(lh + 5)), active && l < 2, (float) (unit(mix(lh + 6)) * 1000)));
         }
         double craterTop = base + relief * Math.pow(Math.max(0, 1 - craterR / radius), exponent);
@@ -480,7 +481,7 @@ public final class Landforms {
         int nl = 3 + (int) (4 * unit(mix(h + 90)));
         for (int l = 0; l < nl; l++) {
             long lh = mix(h + 300 + l);
-            lobes.add(new Lobe(cz, cx, 2 * Math.PI * unit(mix(lh + 1)), 1.2 * craterR, (0.7 + 0.8 * unit(mix(lh + 2))) * radius,
+            lobes.add(new Lobe(cz, cx, 2 * Math.PI * unit(mix(lh + 1)), 1.05 * craterR, (0.7 + 0.8 * unit(mix(lh + 2))) * radius,
                     8 + 8 * unit(mix(lh + 3)), 0.12 + 0.14 * unit(mix(lh + 4)), 3 + 5 * unit(mix(lh + 5)),
                     active && l == 0, (float) (unit(mix(lh + 6)) * 1000)));
         }
@@ -534,7 +535,9 @@ public final class Landforms {
             int nl = 3 + (int) (4 * unit(mix(h + 1)));
             for (int l = 0; l < nl; l++) {
                 long lh = mix(h + 10 + l);
-                out.add(new Lobe(v[0], v[1], 2 * Math.PI * unit(mix(lh + 1)), Math.max(0.1 * v[2], 1.15 * v[5]), (0.8 + 0.5 * unit(mix(lh + 2))) * v[2],
+                // From the crater's rim (they started up to a tenth of the island out, leaving a ring of grass and trees
+                // between the crater and its own flows, Calvin, Nov 1, X 46568 Z -56302).
+                out.add(new Lobe(v[0], v[1], 2 * Math.PI * unit(mix(lh + 1)), 1.05 * v[5], (0.8 + 0.5 * unit(mix(lh + 2))) * v[2],
                         6 + 6 * unit(mix(lh + 3)), 0.12 + 0.12 * unit(mix(lh + 4)), 2 + 4 * unit(mix(lh + 5)), l < 2,
                         (float) (unit(mix(lh + 6)) * 1000)));
             }
