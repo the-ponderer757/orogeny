@@ -2,6 +2,10 @@
 
 ## 1.0.3 (Minecraft 26.3)
 
+### Rivers and lakes
+- Water reaches higher: rivers and lakes now form up to 6,000 m of terrain height (was 4,000 m; `rivers.max_water_m`). An existing `config/orogeny.properties` keeps its old value until you change it.
+- Lakes in high mountain basins can be as large as any other lake (they were kept to small ponds).
+
 ### Fixes
 - Canyon ravines stop short of rivers and lakes instead of cutting under them, so rivers no longer cross a ravine on a plug of rock.
 

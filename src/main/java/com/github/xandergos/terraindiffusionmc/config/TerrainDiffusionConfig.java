@@ -116,7 +116,7 @@ public final class TerrainDiffusionConfig {
     /** Rivers and lakes freezing at all (above rivers.freeze_height_m). Off by default. */
     public static boolean riverFreezeEnabled() { return readBoolean("rivers.freeze", false); }
     /** No rivers or lakes above this terrain height in metres. */
-    public static float riverMaxHeightMetres() { return readFloat("rivers.max_water_m", 4000f); }
+    public static float riverMaxHeightMetres() { return readFloat("rivers.max_water_m", 6000f); }
     public static int lakeMinArea() { return readInt("rivers.lake_min_area", 150); }
     public static float lakeMinDepth() { return readFloat("rivers.lake_min_depth", 2f); }
 

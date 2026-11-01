@@ -23,15 +23,14 @@ public final class RiverMap {
         public int lakeMaxArea = 2500;
         public float lakeMinDepth = 2f;
         /** No water above this terrain height (metres) or below this temperature (deg C). */
-        public float maxElevM = 4000f, minTempC = -15f;
+        public float maxElevM = 6000f, minTempC = -15f;
         /**
          * A closed basin too big to be a lake, at least this deep (metres) and on ground higher than {@link #basinMinElev}
          * (hills and mountains), drains to its lowest point instead of being filled to its rim, and gets a small lake
-         * of about {@link #basinLakeArea} pixels there. Filled flat, its streams were routed across the imaginary flat
-         * water surface: along and up the real slopes, carved deep into the hillsides.
+         * of up to {@link #lakeMaxArea} pixels there, below the basin's rim. Filled flat, its streams were routed across
+         * the imaginary flat water surface: along and up the real slopes, carved deep into the hillsides.
          */
         public float basinMinDepth = 15f, basinMinElev = 700f;
-        public int basinLakeArea = 40;
     }
 
     /** Per-cell results for the whole window. */
@@ -212,6 +211,7 @@ public final class RiverMap {
         // --- big closed basins in the hills and mountains drain to their lowest point (see Params#basinMinDepth).
         // A basin can hold smaller basins, so this repeats a few times on the re-computed network.
         boolean[] sinks = null;
+        float[] spill = null;   // per sink: the basin's spill level (its rim), which its lake stays under
         for (int pass = 0; pass < 4; pass++) {
             boolean added = false;
             java.util.Arrays.fill(seen, false);
@@ -229,8 +229,8 @@ public final class RiverMap {
                 }
                 meanElev /= count;
                 if (maxDepth < p.basinMinDepth || meanElev < p.basinMinElev) continue;
-                if (sinks == null) sinks = new boolean[n];
-                if (!sinks[pit]) { sinks[pit] = true; added = true; }
+                if (sinks == null) { sinks = new boolean[n]; spill = new float[n]; }
+                if (!sinks[pit]) { sinks[pit] = true; spill[pit] = net.filled[pit]; added = true; }
             }
             if (!added) break;
             net = DrainageNetwork.compute(routing, runoff, H, W, 0f, true, sinks);
@@ -238,12 +238,14 @@ public final class RiverMap {
         float[] q = net.limitedDischarge(runoff, p.flowSteps);
         byte[] out = new byte[n];
 
-        // --- a small lake at the bottom of each drained basin, where its streams end: the lowest pixels around the sink,
-        // about basinLakeArea of them, under one flat level that the ground rises above all the way round
+        // --- a lake at the bottom of each drained basin, where its streams end: the lowest pixels around the sink, up to
+        // lakeMaxArea of them (Nov 1: was 40, which kept every mountain basin's lake a small pond; alpine lakes now get
+        // the same size limit as any other), under one flat level that the ground rises above all the way round and
+        // BASIN_FREEBOARD under the basin's rim
         if (sinks != null) {
             for (int s = 0; s < n; s++) {
                 if (!sinks[s]) continue;
-                int count = basinLake(routing, elev, s, p.basinLakeArea, H, W, lake, members);
+                int count = basinLake(routing, elev, s, p.lakeMaxArea, spill[s] - BASIN_FREEBOARD, H, W, lake, members);
                 float level = 0f;
                 for (int k = 0; k < count; k++) level = Math.max(level, routing[members[k]]);
                 for (int k = 0; k < count; k++) { lake[members[k]] = true; net.filled[members[k]] = level; }
@@ -540,7 +542,11 @@ public final class RiverMap {
      * highest of them, so the ground around the lake is at or above its level everywhere. Pixels already in a lake are
      * left out. Returns how many were put into members.
      */
-    private static int basinLake(float[] routing, float[] elev, int sink, int area, int H, int W, boolean[] lake, int[] members) {
+    /** Metres a drained basin's lake stays under the basin's rim. */
+    private static final float BASIN_FREEBOARD = 3f;
+
+    private static int basinLake(float[] routing, float[] elev, int sink, int area, float maxLevel, int H, int W,
+                                 boolean[] lake, int[] members) {
         java.util.PriorityQueue<long[]> heap = new java.util.PriorityQueue<>((x, y) -> Float.compare(Float.intBitsToFloat((int) x[0]), Float.intBitsToFloat((int) y[0])));
         java.util.HashSet<Integer> queued = new java.util.HashSet<>();
         int count = 0;
@@ -551,6 +557,7 @@ public final class RiverMap {
             long[] top = heap.peek();
             float e = Float.intBitsToFloat((int) top[0]);
             if (count >= area && e >= level) break;   // enough pixels, and nothing left below the level
+            if (count > 0 && e > maxLevel) break;     // the rim: the lake never spills over it
             heap.poll();
             int i = (int) top[1];
             members[count++] = i;
