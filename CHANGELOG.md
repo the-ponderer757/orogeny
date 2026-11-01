@@ -21,6 +21,7 @@ First public release of Orogeny, a fork of [Terrain Diffusion](https://github.co
 
 ### Biomes
 - 85 new surface and cave biomes placed by climate: vanilla-style patch biomes (meadow, cherry grove, dark forest, rare large pale gardens, old growth forests, dappled forest), real-world biomes (boreal forest, Siberian taiga, temperate and tropical rainforests, cloud forest, redwoods, aspen groves, steppe, prairie, tundra, bog, marsh, salt marsh, tidal flats and more), and showpieces (volcanoes and lava fields, glaciers, canyons, badlands mesas, hoodoos, dunes, karst towers in the tropics, Yellowstone with geysers, sulfur and cinnabar, Yosemite, painted mountains, white cliffs, geothermal basins).
+- Active volcanoes with lava lakes in their craters and live lava streams pouring down their flows from the crater's rim.
 - Landforms only appear where the terrain already suits them.
 
 ### Caves
