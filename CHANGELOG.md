@@ -10,6 +10,9 @@
 - Lakes in snowy biomes freeze over: a layer of ice on top with liquid water under it (`rivers.freeze_snowy_lakes`, on by default).
 - Axolotls only in lakes above 4,500 m (was 3,000 m).
 
+### Configuration
+- `config/orogeny.properties` lists every setting, grouped by topic with a comment for each. Settings missing from an existing file (from an older version) are added to its end with their defaults; your own values are kept.
+
 ### Fixes
 - Canyon ravines stop short of rivers and lakes instead of cutting under them, so rivers no longer cross a ravine on a plug of rock.
 

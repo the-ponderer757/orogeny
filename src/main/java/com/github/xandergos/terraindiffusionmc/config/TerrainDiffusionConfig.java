@@ -274,16 +274,61 @@ public final class TerrainDiffusionConfig {
                 Files.copy(old, configPath);
             }
             if (Files.exists(configPath)) {
+                Properties overrides = new Properties();
                 try (InputStream in = Files.newInputStream(configPath)) {
-                    Properties overrides = new Properties();
                     overrides.load(in);
                     PROPERTIES.putAll(overrides);
                 }
+                addMissingSettings(configPath, overrides);
             } else {
                 writeConfig(configPath);
             }
         } catch (IOException e) {
             System.err.println("Failed to read config file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Appends to the player's file every setting of the bundled template that it doesn't have, with the template's
+     * comments and default values, so the file always lists everything that can be changed (Calvin, Nov 1: a file
+     * written by an older version lacked rivers.max_water_m and others). The player's own lines are never touched.
+     */
+    private static void addMissingSettings(Path configPath, Properties present) {
+        String template;
+        try (InputStream in = TerrainDiffusionConfig.class.getResourceAsStream(RESOURCE_PATH)) {
+            if (in == null) return;
+            template = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return;
+        }
+        StringBuilder add = new StringBuilder();
+        StringBuilder comments = new StringBuilder();
+        for (String line : template.split("\\R")) {
+            String t = line.trim();
+            if (t.isEmpty()) { comments.setLength(0); continue; }
+            if (t.startsWith("#") || t.startsWith("!")) {
+                // Section headers (# ==== ... ====) start a new block; the file's opening comment never reaches a key.
+                if (t.startsWith("# ====")) comments.setLength(0);
+                else comments.append(line).append('\n');
+                continue;
+            }
+            int eq = t.indexOf('=');
+            String key = (eq < 0 ? t : t.substring(0, eq)).trim();
+            // A comment shared by a group of keys goes with the first of them that is missing.
+            if (!present.containsKey(key)) {
+                if (comments.length() > 0) add.append('\n').append(comments);
+                add.append(line).append('\n');
+            }
+            comments.setLength(0);
+        }
+        if (add.length() == 0) return;
+        try {
+            String existing = Files.readString(configPath);
+            String sep = existing.isEmpty() || existing.endsWith("\n") ? "" : "\n";
+            Files.writeString(configPath, existing + sep + "\n# ==== Added by a newer Orogeny (defaults shown) ====\n" + add,
+                    java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to add new settings to the config file: " + e.getMessage());
         }
     }
 
