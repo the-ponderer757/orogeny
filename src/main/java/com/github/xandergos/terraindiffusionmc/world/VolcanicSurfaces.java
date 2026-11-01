@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li><b>Lava flows</b>: fresh rock (blackstone, basalt, a little smooth basalt) three blocks deep, with the odd
  *   magma block in a hollow.</li>
- *   <li><b>Live lava</b> along the middle of an active volcano's freshest flows and in its crater: only where the
- *   ground is level or a hollow (so nothing can run out, checked on the tile across chunk edges) and every column
- *   within three blocks is bare lava rock (nothing to set alight). Magma under it.</li>
+ *   <li><b>Live lava</b> along the middle of an active volcano's freshest flows, as a continuous stream sunk below its
+ *   banks that pours down the flow's steps, and in its crater where the ground is level or a hollow; only where every
+ *   column within three blocks is bare lava rock (nothing to set alight). Magma under it.</li>
  *   <li><b>Craters</b>: blackstone and tuff, with obsidian near the vent.</li>
  * </ul>
  * Snowy ground keeps its snow (a snow-capped volcano), except where live lava lies.
@@ -114,9 +114,35 @@ public final class VolcanicSurfaces {
         BlockState above = chunk.getBlockState(pos.set(x, y + 1, z));
         if (above.is(Blocks.SNOW)) chunk.setBlockState(pos, Blocks.AIR.defaultBlockState(), 0);
         else if (!above.isAir()) return;
-        // Live lava and magma only where the ground is level or a hollow, so nothing can run out.
         int startX = x - lx, startZ = z - lz;
         int own = tileTop(data, startX, startZ, x, z, scale);
+        // Live channels run down the flow as one stream: each column's lava sits in a trough no higher than the banks
+        // beside it (the columns off the channel), so it can only run on along the channel, and steps between columns
+        // spill as lava falls. (Only level spots used to get lava, which left a downhill channel as stripes, Calvin,
+        // Nov 1, X 105902 Z 43784.)
+        if (tag == Landforms.TAG_LAVA_CHANNEL && own == y && clearOfFuel(data, startX, startZ, x, z)) {
+            int level = own;
+            boolean step = false;
+            int[] ox = {1, -1, 0, 0}, oz = {0, 0, 1, -1};
+            for (int k = 0; k < 4; k++) {
+                int nx = x + ox[k], nz = z + oz[k];
+                int nTop = tileTop(data, startX, startZ, nx, nz, scale);
+                if (nTop == Integer.MIN_VALUE) return;
+                if (isChannel(data, startX, startZ, nx, nz)) {
+                    if (nTop < own) step = true;   // the channel goes on downhill: let it pour
+                } else {
+                    level = Math.min(level, nTop);
+                }
+            }
+            if (own - level > TROUGH_MAX) return;
+            for (int yy = own; yy > level; yy--) chunk.setBlockState(pos.set(x, yy, z), Blocks.AIR.defaultBlockState(), 0);
+            if (chunk.getBlockState(pos.set(x, level + 1, z)).is(Blocks.SNOW)) chunk.setBlockState(pos, Blocks.AIR.defaultBlockState(), 0);
+            chunk.setBlockState(pos.set(x, level, z), Blocks.LAVA.defaultBlockState(), 0);
+            chunk.setBlockState(pos.set(x, level - 1, z), Blocks.MAGMA_BLOCK.defaultBlockState(), 0);
+            if (step || level < own) chunk.markPosForPostProcessing(pos.set(x, level, z));
+            return;
+        }
+        // Lava lakes and magma only where the ground is level or a hollow, so nothing can run out.
         if (own != y || !levelOrHollow(data, startX, startZ, x, z, scale, own)) return;
         if (liveTag && clearOfFuel(data, startX, startZ, x, z)) {
             chunk.setBlockState(pos.set(x, y, z), Blocks.LAVA.defaultBlockState(), 0);
@@ -124,6 +150,18 @@ public final class VolcanicSurfaces {
         } else if (tag == Landforms.TAG_LAVA && unit(mix(h + 9)) < MAGMA_CHANCE) {
             chunk.setBlockState(pos.set(x, y, z), Blocks.MAGMA_BLOCK.defaultBlockState(), 0);
         }
+    }
+
+    /** Deepest a live channel is sunk below its own ground to sit under its banks. */
+    private static final int TROUGH_MAX = 3;
+
+    /** Whether block column (x, z) is a live lava channel or lava lake. */
+    private static boolean isChannel(HeightmapData data, int startX, int startZ, int x, int z) {
+        HeightmapData d = tileAt(data, startX, startZ, x, z);
+        if (d == null || d.oceanTags == null) return false;
+        int size = TerrainDiffusionConfig.tileSize(), shift = Integer.numberOfTrailingZeros(size);
+        byte v = d.oceanTags[z - ((z >> shift) << shift)][x - ((x >> shift) << shift)];
+        return v == Landforms.TAG_LAVA_CHANNEL || v == Landforms.TAG_LAVA_LAKE;
     }
 
     /** Fresh lava rock: blackstone and basalt in patches, a little smooth basalt. */
