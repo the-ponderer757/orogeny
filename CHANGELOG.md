@@ -1,11 +1,5 @@
 # Changelog
 
-## 1.0.1 (Minecraft 26.3)
-
-### Fixes
-- Rock shelters only at the foot of real cliffs, where the ground levels out below them, and on a coarser grid: steep mountain faces are no longer pocked with dozens of overhangs.
-- Mod links (homepage, source, issues) point at the renamed repository, github.com/calvin-bates/orogeny.
-
 ## 1.0.0 (Minecraft 26.3)
 
 First public release of Orogeny, a fork of [Terrain Diffusion](https://github.com/xandergos/terrain-diffusion-mc) by xandergos.
@@ -34,7 +28,7 @@ First public release of Orogeny, a fork of [Terrain Diffusion](https://github.co
 - Orogeny's own noise caves under any terrain, measured from the ground above, with a solid roof.
 - 36 cave biomes in common, uncommon, rare and very rare tiers, including vanilla's lush caves, deep dark and sulfur caves (with sulfur cubes, under volcanic ground and Yellowstone).
 - Giant halls (geode hall, deep dark forest, selenite beams), ancient cities in caverns that hold them, underground lakes and lava, cenotes, blue holes, ravines, deep shafts, collapse domes and cave mouths.
-- Cave formations: columns, stalactites and stalagmites, flowstone, rimstone pools, crystal rooms, boxwork, natural bridges, rock shelters, travertine terraces.
+- Cave formations: columns, stalactites and stalagmites, flowstone, rimstone pools, crystal rooms, boxwork, natural bridges, rock shelters at the foot of cliffs, travertine terraces.
 
 ### Structures and gameplay
 - Villages and outposts sit on ground pads; vanilla structures spawn everywhere except ancient cities, which stay under mountains.
