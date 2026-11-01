@@ -189,6 +189,39 @@ public final class Landforms {
         }
     }
 
+    /** A volcano's outline radius (pixels) in direction th: it varies by direction, sampled on a circle (no seam). */
+    private double coneRadius(Volcano v, double th) {
+        float cs = (float) Math.cos(th), sn = (float) Math.sin(th);
+        return v.radius * (1 + 0.12 * Math.sin(th + v.p1) + 0.06 * Math.sin(2 * th + v.p2)
+                + 0.08 * outline.GetNoise(cs + (v.h & 0xFF), sn - 31));
+    }
+
+    /**
+     * Marks a stratovolcano's cone in the hydrology's volcanic mask ({@link RiverMap#computeFull}): every land pixel
+     * within its outline that the mask doesn't already mark gets {@code value}. The cone is reshaped toward a steep
+     * profile over the model's ground, and the hollows that leaves on its flanks (gullies, rough noise, the blend at
+     * the foot) ponded as lakes perched on the slope with walls of water (Calvin, Nov 1, X -14253 Z 9538). Returns the
+     * mask, allocated if it was null and anything was marked.
+     */
+    public float[] markCones(float[] elev, int i1, int j1, int H, int W, float[] mask, float value) {
+        for (Volcano v : volcanoesNear(i1, j1, i1 + H, j1 + W)) {
+            if (v.type != STRATO) continue;
+            double rmax = v.radius * 1.3;
+            int r0 = Math.max(0, (int) Math.floor(v.cz - rmax) - i1), r1 = Math.min(H - 1, (int) Math.ceil(v.cz + rmax) - i1);
+            int c0 = Math.max(0, (int) Math.floor(v.cx - rmax) - j1), c1 = Math.min(W - 1, (int) Math.ceil(v.cx + rmax) - j1);
+            for (int r = r0; r <= r1; r++)
+                for (int c = c0; c <= c1; c++) {
+                    int k = r * W + c;
+                    if (elev[k] <= 0f || (mask != null && mask[k] != 0f)) continue;
+                    double dz = i1 + r + 0.5 - v.cz, dx = j1 + c + 0.5 - v.cx;
+                    if (Math.hypot(dz, dx) >= coneRadius(v, Math.atan2(dz, dx))) continue;
+                    if (mask == null) mask = new float[H * W];
+                    mask[k] = value;
+                }
+        }
+        return mask;
+    }
+
     /** One volcano's edit at offset (dz, dx) from its centre; out = {elevation, tag}, updated in place. */
     private void shape(Volcano v, double dz, double dx, double x, double z, float[] out) {
         double e = out[0];
@@ -196,8 +229,7 @@ public final class Landforms {
         double r = Math.hypot(dz, dx), th = Math.atan2(dz, dx);
         // An uneven outline: the radius varies by direction (sampled on a circle, so there is no seam).
         float cs = (float) Math.cos(th), sn = (float) Math.sin(th);
-        double rTheta = v.radius * (1 + 0.12 * Math.sin(th + v.p1) + 0.06 * Math.sin(2 * th + v.p2)
-                + 0.08 * outline.GetNoise(cs + (v.h & 0xFF), sn - 31));
+        double rTheta = coneRadius(v, th);
         double u = r / rTheta;
         if (u < 1.0) {
             double relief = v.summit - v.base;

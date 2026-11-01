@@ -952,15 +952,19 @@ public final class WorldPipeline implements AutoCloseable {
             byte[] lt = tagsOut != null ? tagsOut : withClimate ? new byte[H * W] : null;
             landforms.apply(elevFlat, i1, j1, H, W, lt, vents);
             if (withClimate) {
-                // 2: an active volcano's hot ground; 1: other fresh volcanic rock (cone, crater, lava flows).
+                // 2: an active volcano's hot ground; 1.5: a dormant crater; 1: other fresh volcanic rock (upper cone, lava
+                // flows); 0.5: a stratovolcano's lower cone (see RiverMap#computeFull).
                 for (int k = 0; k < H * W; k++) {
                     byte t = lt[k];
                     float v = t == Landforms.TAG_LAVA_LAKE || t == Landforms.TAG_HOT_CRATER || t == Landforms.TAG_LAVA_CHANNEL ? 2f
-                            : t == Landforms.TAG_LAVA || t == Landforms.TAG_VOLCANO || t == Landforms.TAG_CRATER ? 1f : 0f;
+                            : t == Landforms.TAG_CRATER ? com.github.xandergos.terraindiffusionmc.hydrology.RiverMap.VOLC_CRATER
+                            : t == Landforms.TAG_LAVA || t == Landforms.TAG_VOLCANO ? 1f : 0f;
                     if (v == 0f) continue;
                     if (hot == null) hot = new float[H * W];
                     hot[k] = v;
                 }
+                // A stratovolcano's lower cone (no tag): no lakes perched on its flanks.
+                hot = landforms.markCones(elevFlat, i1, j1, H, W, hot, com.github.xandergos.terraindiffusionmc.hydrology.RiverMap.VOLC_CONE);
                 // An active island volcano's cone is drawn by the model and carries no tags outside its crater: count
                 // the ground within ISLAND_CONE crater radii of the vent as volcanic rock too.
                 if (vents != null) {

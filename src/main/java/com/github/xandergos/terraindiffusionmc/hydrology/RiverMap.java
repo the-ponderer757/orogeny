@@ -124,9 +124,44 @@ public final class RiverMap {
         }
     }
 
+    /**
+     * Clears every lake component (4-connected) with more than {@link #CONE_LAKE_SHARE} of its pixels on a volcano's
+     * cone or lava flows (mask values from {@link #VOLC_CONE} up to, not including, {@link #VOLC_CRATER}). The cone is
+     * reshaped steeper than the model drew it, and the hollows left on its flanks ponded as lakes perched on the
+     * slope, standing over the ground below them behind walls of water (Calvin, Nov 1, X -14253 Z 9538). A lake in a
+     * dormant crater or pit crater stays.
+     */
+    private static void dropLakesOnCones(boolean[] lake, float[] hot, int H, int W, int[] stack, int[] members) {
+        int n = H * W;
+        boolean[] seen = new boolean[n];
+        for (int s = 0; s < n; s++) {
+            if (!lake[s] || seen[s]) continue;
+            int sp = 0, count = 0, onCone = 0;
+            stack[sp++] = s;
+            seen[s] = true;
+            while (sp > 0) {
+                int i = stack[--sp];
+                members[count++] = i;
+                if (hot[i] >= VOLC_CONE && hot[i] < VOLC_CRATER) onCone++;
+                int r = i / W, c = i % W;
+                if (r > 0 && lake[i - W] && !seen[i - W]) { seen[i - W] = true; stack[sp++] = i - W; }
+                if (r < H - 1 && lake[i + W] && !seen[i + W]) { seen[i + W] = true; stack[sp++] = i + W; }
+                if (c > 0 && lake[i - 1] && !seen[i - 1]) { seen[i - 1] = true; stack[sp++] = i - 1; }
+                if (c < W - 1 && lake[i + 1] && !seen[i + 1]) { seen[i + 1] = true; stack[sp++] = i + 1; }
+            }
+            if (onCone <= CONE_LAKE_SHARE * count) continue;
+            for (int k = 0; k < count; k++) lake[members[k]] = false;
+        }
+    }
+
     public static Result computeFull(float[] elev, float[] climate, int H, int W, int i0, int j0, Params p) {
         return computeFull(elev, climate, null, H, W, i0, j0, p);
     }
+
+    /** Volcanic mask values (see {@link #computeFull}): a dormant crater, and a stratovolcano's lower cone. */
+    public static final float VOLC_CRATER = 1.5f, VOLC_CONE = 0.5f;
+    /** A lake with more than this share of its pixels on a volcano's cone or lava flows is dropped. */
+    static final float CONE_LAKE_SHARE = 0.3f;
 
     /** Native pixels from an active volcano's hot ground within which no lake is kept (see {@link #computeFull}). */
     static final int HOT_LAKE_GAP = 4;
@@ -246,7 +281,10 @@ public final class RiverMap {
             }
         }
 
-        if (hot != null) dropLakesNearHot(lake, hot, H, W, stack, members);
+        if (hot != null) {
+            dropLakesNearHot(lake, hot, H, W, stack, members);
+            dropLakesOnCones(lake, hot, H, W, stack, members);
+        }
 
         for (int i = 0; i < n; i++) {
             float e = elev[i];

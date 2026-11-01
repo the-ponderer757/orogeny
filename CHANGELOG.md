@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 (Minecraft 26.3)
+
+### Fixes
+- No lakes perched on the flanks of stratovolcanoes behind walls of water. Lakes in dormant craters and pit craters stay.
+
 ## 1.0.1 (Minecraft 26.3)
 
 ### Fixes
