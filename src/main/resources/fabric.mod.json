@@ -14,9 +14,9 @@
     }
   ],
   "contact": {
-    "homepage": "https://github.com/calvin-bates/terrain-diffusion-mc",
-    "sources": "https://github.com/calvin-bates/terrain-diffusion-mc",
-    "issues": "https://github.com/calvin-bates/terrain-diffusion-mc/issues"
+    "homepage": "https://github.com/calvin-bates/orogeny",
+    "sources": "https://github.com/calvin-bates/orogeny",
+    "issues": "https://github.com/calvin-bates/orogeny/issues"
   },
   "license": "MIT",
   "icon": "assets/orogeny/icon.png",
