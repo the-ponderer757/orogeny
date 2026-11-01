@@ -217,7 +217,8 @@ public final class RiverService {
         int span = size + 2 * margin;
         try {
             float[][] data = source.get(i0, j0, i0 + span, j0 + span);
-            RiverMap.Result res = RiverMap.computeFull(data[0], data[1], span, span, i0, j0, params);
+            float[] hot = data.length > 2 ? data[2] : null;   // active volcanoes' hot ground (WorldPipeline#get)
+            RiverMap.Result res = RiverMap.computeFull(data[0], data[1], hot, span, span, i0, j0, params);
             Region region = new Region(i0, j0, span, span, res, data[1], ri, rj, size);
             cache.put(key, region);
             return region;

@@ -53,6 +53,10 @@ public final class RiverCarver {
 
     /** Deepest a steep channel column is cut down to its cross-section's lowest column (blocks). */
     private static final int STEP_CUT_MAX = 4;
+    /** Water-level drop allowed per block along the channel inside one cross-section (see the one-level pass). */
+    private static final float STEEP_ALLOW = 2f;
+    /** Most a dry hole in a channel may stand over the water around it and still be filled (see the hole pass). */
+    private static final int HOLE_MAX = 4;
     /** Distance (blocks) from the channel edge over which banks are shaped. */
     private static final float BANK = 4f;   // how far a stream reshapes the ground beside it (was 8: diagonal steps reached too far)
     /** Bank rise per block of distance from the channel edge. */
@@ -850,10 +854,17 @@ public final class RiverCarver {
                             int j = rr * W + cc;
                             if (chanWater[j] == NOWATER) continue;
                             float ddx = cpx[j] - cpx[idx], ddz = cpz[j] - cpz[idx];
-                            if (ddx * ddx + ddz * ddz > 2.25f) continue;
-                            if (chanWater[j] < min) min = chanWater[j];
-                            if (ytop[j] < minTop) minTop = ytop[j];
-                            if (score[j] < best) { best = score[j]; ref = chanWater[j]; }
+                            float d2 = ddx * ddx + ddz * ddz;
+                            if (d2 > 2.25f) continue;
+                            // The cross-section reaches up to a block and a half along the channel too; on a steep reach
+                            // the water there is legitimately lower by the slope. Allow STEEP_ALLOW blocks per block of
+                            // that offset, so a cascade's columns are not mistaken for bank above the water (Calvin, Nov 1,
+                            // X -25542 Z 48855: dry ribs and pillars across a steep stream). Across a bend the offset is
+                            // ~0, so a strip climbing the bank is still dropped as before.
+                            int allow = (int) Math.floor(STEEP_ALLOW * Math.sqrt(d2));
+                            if (chanWater[j] + allow < min) min = chanWater[j] + allow;
+                            if (ytop[j] + allow < minTop) minTop = ytop[j] + allow;
+                            if (score[j] < best) { best = score[j]; ref = chanWater[j] + allow; }
                         }
                     }
                     if (cA[idx] >= RiverMap.RIVER) {
@@ -1706,6 +1717,46 @@ public final class RiverCarver {
                     }
                 }
             }
+        }
+
+        // Holes in a channel: a dry column with stream or river water on two opposite sides, its ground at most
+        // HOLE_MAX blocks over the lower of them, is part of the channel that one of the passes above left out (a step
+        // the cross-section rules dropped, a skipped steep column): it stood as a stone pillar or a dry rib across a
+        // cascade (Calvin, Nov 1, X -25542 Z 48855). Fill it at that level, as long as its other two sides hold the water
+        // (water, or ground at least that high). Lakes are left alone (their dry patches are flush shore on purpose).
+        for (int pass = 0; pass < 3; pass++) {
+            boolean grew = false;
+            for (int r = 1; r < H - 1; r++) {
+                for (int c = 1; c < W - 1; c++) {
+                    int idx = r * W + c;
+                    if (waterY[r][c] != NONE) continue;
+                    int top = surfaceY[r][c] != NONE ? surfaceY[r][c] : ytop[idx];
+                    if (top < SEA_SURFACE_Y) continue;
+                    int best = Integer.MAX_VALUE;
+                    int[][] pairs = {{idx - W, idx + W, idx - 1, idx + 1}, {idx - 1, idx + 1, idx - W, idx + W}};
+                    for (int[] pr : pairs) {
+                        int a = pr[0], b = pr[1];
+                        int wa = waterY[a / W][a % W], wb = waterY[b / W][b % W];
+                        if (wa == NONE || wb == NONE || lakeCol[a] || lakeCol[b]) continue;
+                        int lvl = Math.min(wa, wb);
+                        if (top - lvl > HOLE_MAX) continue;
+                        boolean held = true;
+                        for (int k = 2; k < 4 && held; k++) {
+                            int s2 = pr[k];
+                            if (waterY[s2 / W][s2 % W] != NONE) continue;
+                            int g2 = surfaceY[s2 / W][s2 % W] != NONE ? surfaceY[s2 / W][s2 % W] : ytop[s2];
+                            if (g2 < lvl) held = false;
+                        }
+                        if (held) best = Math.min(best, lvl);
+                    }
+                    if (best == Integer.MAX_VALUE || best > top + 1) continue;
+                    waterY[r][c] = (short) best;
+                    surfaceY[r][c] = (short) Math.min(top, best - 1);
+                    grew = true;
+                    any = true;
+                }
+            }
+            if (!grew) break;
         }
 
         // Diagnostics: water columns held up by a tall drop on the dry side ("dams"). Logs a few per tile with the

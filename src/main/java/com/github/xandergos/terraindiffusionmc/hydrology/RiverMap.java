@@ -83,7 +83,62 @@ public final class RiverMap {
      * @param i0      world row of the window's first row (for position-stable jitter noise)
      * @param j0      world column of the window's first column
      */
+    /** Clears every lake component (4-connected) with a pixel within {@link #HOT_LAKE_GAP} of a hot pixel. */
+    private static void dropLakesNearHot(boolean[] lake, float[] hot, int H, int W, int[] stack, int[] members) {
+        int n = H * W, g = HOT_LAKE_GAP;
+        // Hot ground grown by the gap (Chebyshev), as two separable passes.
+        boolean any = false;
+        boolean[] rowGrown = new boolean[n];
+        for (int i = 0; i < n && !any; i++) any = hot[i] != 0f;
+        if (!any) return;
+        for (int r = 0; r < H; r++)
+            for (int c = 0; c < W; c++) {
+                if (hot[r * W + c] == 0f) continue;
+                for (int cc = Math.max(0, c - g); cc <= Math.min(W - 1, c + g); cc++) rowGrown[r * W + cc] = true;
+            }
+        boolean[] near = new boolean[n];
+        for (int r = 0; r < H; r++)
+            for (int c = 0; c < W; c++) {
+                if (!rowGrown[r * W + c]) continue;
+                for (int rr = Math.max(0, r - g); rr <= Math.min(H - 1, r + g); rr++) near[rr * W + c] = true;
+            }
+        boolean[] seen = new boolean[n];
+        for (int s = 0; s < n; s++) {
+            if (!lake[s] || seen[s]) continue;
+            int sp = 0, count = 0;
+            boolean touches = false;
+            stack[sp++] = s;
+            seen[s] = true;
+            while (sp > 0) {
+                int i = stack[--sp];
+                members[count++] = i;
+                touches |= near[i];
+                int r = i / W, c = i % W;
+                if (r > 0 && lake[i - W] && !seen[i - W]) { seen[i - W] = true; stack[sp++] = i - W; }
+                if (r < H - 1 && lake[i + W] && !seen[i + W]) { seen[i + W] = true; stack[sp++] = i + W; }
+                if (c > 0 && lake[i - 1] && !seen[i - 1]) { seen[i - 1] = true; stack[sp++] = i - 1; }
+                if (c < W - 1 && lake[i + 1] && !seen[i + 1]) { seen[i + 1] = true; stack[sp++] = i + 1; }
+            }
+            if (!touches) continue;
+            for (int k = 0; k < count; k++) lake[members[k]] = false;
+        }
+    }
+
     public static Result computeFull(float[] elev, float[] climate, int H, int W, int i0, int j0, Params p) {
+        return computeFull(elev, climate, null, H, W, i0, j0, p);
+    }
+
+    /** Native pixels from an active volcano's hot ground within which no lake is kept (see {@link #computeFull}). */
+    static final int HOT_LAKE_GAP = 4;
+
+    /**
+     * @param hot per pixel, non-zero on an active volcano's hot ground (lava lake, hot crater, live lava channel), or
+     *            null. A lake within {@link #HOT_LAKE_GAP} pixels of it is dropped whole: the hydrology ponded the
+     *            hollows of the crater and its rim, and only the part on the hot ground itself was taken out later, so
+     *            half-lakes stood beside the crater with walls of water (Calvin, Nov 1, an island volcano). Decided on
+     *            the region's data, so every tile sees the same lakes.
+     */
+    public static Result computeFull(float[] elev, float[] climate, float[] hot, int H, int W, int i0, int j0, Params p) {
         int n = H * W;
         float[] routing = new float[n];
         float[] runoff = new float[n];
@@ -184,6 +239,8 @@ public final class RiverMap {
                 for (int k = 0; k < count; k++) net.filled[members[k]] = level;
             }
         }
+
+        if (hot != null) dropLakesNearHot(lake, hot, H, W, stack, members);
 
         for (int i = 0; i < n; i++) {
             float e = elev[i];

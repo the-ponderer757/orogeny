@@ -944,14 +944,25 @@ public final class WorldPipeline implements AutoCloseable {
         }
         // Landforms (biomes plan v1.4): carved after the ocean features, before the climate, so the lapse rate, rivers
         // and biomes all follow them.
+        // Hot ground of active volcanoes, for the hydrology (no lakes beside a live crater; RiverMap#computeFull).
+        float[] hot = null;
         if (TerrainDiffusionConfig.volcanoes()) {
             List<double[]> vents = TerrainDiffusionConfig.oceanFeatures()
                     ? oceanFeatures.activeVents(i1, j1, i2, j2, oceanCoarseField(i1, j1, i2, j2)) : null;
-            landforms.apply(elevFlat, i1, j1, H, W, tagsOut, vents);
+            byte[] lt = tagsOut != null ? tagsOut : withClimate ? new byte[H * W] : null;
+            landforms.apply(elevFlat, i1, j1, H, W, lt, vents);
+            if (withClimate) {
+                for (int k = 0; k < H * W; k++) {
+                    byte t = lt[k];
+                    if (t != Landforms.TAG_LAVA_LAKE && t != Landforms.TAG_HOT_CRATER && t != Landforms.TAG_LAVA_CHANNEL) continue;
+                    if (hot == null) hot = new float[H * W];
+                    hot[k] = 1f;
+                }
+            }
         }
         if (TerrainDiffusionConfig.showpieces()) showpieces.apply(elevFlat, i1, j1, H, W, tagsOut);
         float[] climate = withClimate ? computeClimate(i1, j1, i2, j2, elevFlat, H, W) : null;
-        return new float[][]{elevFlat, climate};
+        return hot == null ? new float[][]{elevFlat, climate} : new float[][]{elevFlat, climate, hot};
     }
 
     /** Rift sea drowning: low ground (fully below the first, untouched above the second, metres) and floor depth. */
