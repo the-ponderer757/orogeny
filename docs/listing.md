@@ -14,8 +14,8 @@ Copy the parts below into each site. Both accept Markdown for the description.
 | Environment | Server: required. Client: optional (needed for singleplayer and to create worlds; joining a server without it should work but is untested) |
 | Dependencies | Fabric API (required) |
 | License | MIT |
-| Source | https://github.com/calvin-bates/orogeny |
-| Issues | https://github.com/calvin-bates/orogeny/issues |
+| Source | https://github.com/the-ponderer757/orogeny |
+| Issues | https://github.com/the-ponderer757/orogeny/issues |
 | Icon | `src/main/resources/assets/orogeny/icon.png` |
 
 **Files to upload per version:** all three jars from the GitHub release, with these display names and notes:
@@ -60,7 +60,7 @@ Orogeny replaces the overworld with terrain drawn by [Terrain Diffusion](https:/
 | File | Use it on |
 |---|---|
 | **windows** | Windows with any modern GPU (recommended) |
-| **cuda** | NVIDIA GPUs with CUDA and cuDNN installed ([download from GitHub](https://github.com/calvin-bates/orogeny/releases)) |
+| **cuda** | NVIDIA GPUs with CUDA and cuDNN installed ([download from GitHub](https://github.com/the-ponderer757/orogeny/releases)) |
 | **cpu** | Everything else; uses CoreML on Apple Silicon Macs |
 
 ### Getting started

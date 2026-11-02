@@ -26,7 +26,7 @@
 
 ### Fixes
 - Rock shelters only at the foot of real cliffs, where the ground levels out below them, and on a coarser grid: steep mountain faces are no longer pocked with dozens of overhangs.
-- Mod links (homepage, source, issues) point at the renamed repository, github.com/calvin-bates/orogeny.
+- Mod links (homepage, source, issues) point at the renamed repository, github.com/the-ponderer757/orogeny.
 
 ## 1.0.0 (Minecraft 26.3)
 

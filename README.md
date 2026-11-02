@@ -88,7 +88,7 @@ Rivers, lakes, oceans, landforms and caves each have their own switches (`rivers
 
 **Not compatible with PolyhedralDev's Terra or other world-type mods.** Orogeny replaces the overworld generator for its own world type; other world types are untouched.
 
-Report other problems on the [issue tracker](https://github.com/calvin-bates/orogeny/issues).
+Report other problems on the [issue tracker](https://github.com/the-ponderer757/orogeny/issues).
 
 ## Building from source
 
