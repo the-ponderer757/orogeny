@@ -1,0 +1,64 @@
+name: Bug report
+description: Something generates wrong, crashes, or doesn't work.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Terrain bugs are much easier to fix with the seed, world scale and coordinates.
+        Tip: stand on the spot and run `/orogeny-column`; it writes a detailed map of that area to your log.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. F3 visible in the screenshot helps.
+  - type: input
+    id: version
+    attributes:
+      label: Orogeny version and build
+      placeholder: "1.0.3 windows"
+    validations:
+      required: true
+  - type: input
+    id: seed
+    attributes:
+      label: World seed
+      description: "Run /seed in game."
+  - type: dropdown
+    id: scale
+    attributes:
+      label: World scale
+      options: ["1", "2", "3", "4", "5", "6", "Not sure"]
+  - type: input
+    id: coords
+    attributes:
+      label: Coordinates
+      placeholder: "X 65030, Y 1240, Z 169240"
+  - type: textarea
+    id: column
+    attributes:
+      label: /orogeny-column output
+      description: For terrain, water and cave bugs. Copy the block that starts with "orogeny-column at" from logs/latest.log.
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Crash report or log
+      description: For crashes or errors, attach logs/latest.log or the crash report (drag the file here).
+  - type: input
+    id: system
+    attributes:
+      label: System
+      placeholder: "Windows 11, RTX 4070, Minecraft 26.3, Fabric Loader 0.19.5"
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: Especially other world generation, performance or chunk-loading mods (C2ME, Distant Horizons, Chunky ...).
