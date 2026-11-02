@@ -9,6 +9,10 @@
 - **Deep dark infestation** replaces the deep dark incursion: the deep dark creeping up into ordinary caves 60-140 blocks underground, with sculk veins over the walls, sculk mats, sculk stalks topped with sensors, sculk dripping from the ceiling and the odd shrieker.
 - **Redwood forests** are much bigger: each forest is on average about ten times the area it was.
 
+### Servers
+- New `world.scale` setting (1 to 6, default 2) in `config/orogeny.properties` picks the scale of a world created without the create-world screen, as on a dedicated server; the world keeps its scale after that. The log reports each world's scale when it loads.
+- The README has a "Running on a server" section (installing, choosing the scale, `level-type=orogeny\:terrain_diffusion`).
+
 These four biomes no longer reuse other mods' design data. Worlds made before 1.0.4 keep their already generated terrain; new chunks use the new designs. Caves already saved as frostfire caves or deep dark incursion keep their blocks, but Minecraft will log a warning for the missing biome and show a default biome there.
 
 ## 1.0.3 (Minecraft 26.3)

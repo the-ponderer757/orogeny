@@ -58,6 +58,14 @@ public final class TerrainDiffusionConfig {
     }
 
     /** TCP port for the local terrain explorer HTTP server. */
+    /**
+     * World scale (1-6) for worlds created without the create-world screen's scale picker: dedicated servers. Read
+     * once, when the world is first created; the world saves its scale and keeps it after that.
+     */
+    public static int worldScale() {
+        return Math.max(1, Math.min(6, readInt("world.scale", 2)));
+    }
+
     public static int explorerPort() {
         return readInt("explorer.port", DEFAULT_EXPLORER_PORT);
     }

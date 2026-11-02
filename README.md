@@ -43,7 +43,22 @@ The CPU build works everywhere but is slow except on Apple Silicon.
 
 ### World scale
 
-Each world saves its scale (1 to 6). Scale `n` means one block is `30 / n` metres, so higher scales spread the same terrain over more blocks: taller mountains, longer rivers, bigger everything. Scale 2 is a good balance. Lower scales run the AI model more often (more GPU load); higher scales make taller worlds (more CPU and memory load).
+Each world saves its scale (1 to 6); on a dedicated server, set it with `world.scale` before the world is created (see [Running on a server](#running-on-a-server)). Scale `n` means one block is `30 / n` metres, so higher scales spread the same terrain over more blocks: taller mountains, longer rivers, bigger everything. Scale 2 is a good balance. Lower scales run the AI model more often (more GPU load); higher scales make taller worlds (more CPU and memory load).
+
+## Running on a server
+
+Orogeny generates the world on the server, so the server is where it needs to be installed (with Fabric API). Players can join without it.
+
+1. Put the Orogeny jar for the server's system and Fabric API in the server's `mods/` folder. The server does the terrain generation, so it needs the GPU (or uses the CPU build), the extra memory and the one-time model download listed under Requirements.
+2. Start the server once so it writes `config/orogeny.properties`, then stop it.
+3. Choose the world scale in `config/orogeny.properties` (`world.scale`, 1 to 6, default 2). It is read only when the world is first created; after that the world keeps its scale.
+4. In `server.properties`, set the world type to Orogeny, and point `level-name` at a world that doesn't exist yet (or delete the old one):
+   ```properties
+   level-type=orogeny\:terrain_diffusion
+   ```
+5. Start the server. The log shows `Orogeny: world scale N` once the world loads.
+
+Note that Orogeny's commands currently work for every player, including `/orogeny-find`, which teleports. `/orogeny-explore` opens its map on the server's own machine (127.0.0.1), so it is only useful when you play on the same computer as the server.
 
 ## Commands
 

@@ -18,8 +18,9 @@ public final class WorldScaleManager {
     /**
      * Loads or creates per-world scale settings and sets the active runtime value.
      *
-     * <p>If the world has no explicit stored scale yet, this applies pending
-     * world-creation selection when present, otherwise falls back to {@value #DEFAULT_SCALE}.
+     * <p>If the world has no explicit stored scale yet (it is being created), this applies the scale picked on the
+     * create-world screen when there is one, otherwise the config's {@code world.scale} (dedicated servers, which have
+     * no create-world screen; Calvin, Nov 2). Once stored, the world keeps its scale whatever the config says later.
      */
     public static void initializeForWorld(ServerLevel serverWorld) {
         WorldScaleSettingsState worldScaleSettingsState = serverWorld.getDataStorage()
@@ -27,11 +28,14 @@ public final class WorldScaleManager {
 
         if (!worldScaleSettingsState.hasExplicitScale()) {
             Integer pendingScale = WorldScaleSelectionState.consumePendingScale();
-            int resolvedScale = pendingScale != null ? pendingScale : DEFAULT_SCALE;
+            int resolvedScale = pendingScale != null ? pendingScale
+                    : com.github.xandergos.terraindiffusionmc.config.TerrainDiffusionConfig.worldScale();
             worldScaleSettingsState.setScale(resolvedScale);
         }
 
         currentScale = clampScale(worldScaleSettingsState.getScale());
+        org.slf4j.LoggerFactory.getLogger(WorldScaleManager.class).info(
+                "Orogeny: world scale {} (one block is {} m)", currentScale, 30f / currentScale);
     }
 
     /**
