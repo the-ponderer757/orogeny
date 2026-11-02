@@ -295,16 +295,17 @@ public final class RiverMap {
             dropLakesNearHot(lake, hot, H, W, stack, members);
             dropLakesOnCones(lake, hot, H, W, stack, members);
         }
+        dropColdOrHighLakes(lake, net.filled, climate, H, W, p, stack, members);
         if (p.blockScale > 1) fitLakesToBlocks(elev, lake, net.filled, H, W, p.blockScale, stack, members);
 
         for (int i = 0; i < n; i++) {
             float e = elev[i];
             if (e <= 0f) continue;
+            // Lakes were kept or dropped whole just above.
+            if (lake[i]) { out[i] = LAKE; continue; }
             // No water on snowy / stony high ground.
             float temp = climate != null ? climate[i] : 10f;
             if (temp < p.minTempC || e > p.maxElevM) continue;
-
-            if (lake[i]) { out[i] = LAKE; continue; }
 
             float d = q[i];
             float streamQ = e > 1500f ? p.streamQ * 0.6f : p.streamQ;   // mountain streams are small but common
@@ -360,6 +361,40 @@ public final class RiverMap {
         Result result = new Result(out, net.downstream, net.filled, elev);
         result.size = channelSize(out, q, elev, net.downstream, p);
         return result;
+    }
+
+    /**
+     * The cold and height limits for water ({@link Params#minTempC}, {@link Params#maxElevM}), applied to each lake as a
+     * whole: by its mean temperature and its level. Applied per pixel, they cut a lake along a temperature contour across
+     * its basin, so the part left as lake stood at the basin's full level beside the dry, lower ground of the part
+     * that was cut, and the carver dammed the gap in stairs (Calvin, Nov 1, X 65030 Z 169240: pixels at 5801-5844 m in
+     * a basin filled to 5849 m, not lake, beside lake pixels).
+     */
+    private static void dropColdOrHighLakes(boolean[] lake, float[] filled, float[] climate, int H, int W, Params p,
+                                            int[] stack, int[] members) {
+        int n = H * W;
+        boolean[] seen = new boolean[n];
+        for (int s0 = 0; s0 < n; s0++) {
+            if (!lake[s0] || seen[s0]) continue;
+            int sp = 0, count = 0;
+            stack[sp++] = s0;
+            seen[s0] = true;
+            double tSum = 0;
+            float level = Float.NEGATIVE_INFINITY;
+            while (sp > 0) {
+                int i = stack[--sp];
+                members[count++] = i;
+                tSum += climate != null ? climate[i] : 10f;
+                level = Math.max(level, filled[i]);
+                int r = i / W, c = i % W;
+                if (r > 0 && lake[i - W] && !seen[i - W]) { seen[i - W] = true; stack[sp++] = i - W; }
+                if (r < H - 1 && lake[i + W] && !seen[i + W]) { seen[i + W] = true; stack[sp++] = i + W; }
+                if (c > 0 && lake[i - 1] && !seen[i - 1]) { seen[i - 1] = true; stack[sp++] = i - 1; }
+                if (c < W - 1 && lake[i + 1] && !seen[i + 1]) { seen[i + 1] = true; stack[sp++] = i + 1; }
+            }
+            if (tSum / count >= p.minTempC && level <= p.maxElevM) continue;
+            for (int k = 0; k < count; k++) lake[members[k]] = false;
+        }
     }
 
     /** Metres a lake stays under the lowest point of its rim at block resolution. */
