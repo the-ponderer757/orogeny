@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:random_selector",
+  "default": "orogeny:ponderosa_pine_checked",
+  "features": [
+    {
+      "chance": 0.25,
+      "feature": "orogeny:incense_cedar_checked"
+    },
+    {
+      "chance": 0.3,
+      "feature": "orogeny:black_oak_checked"
+    },
+    {
+      "chance": 0.025,
+      "feature": "orogeny:redwood_checked"
+    }
+  ]
+}

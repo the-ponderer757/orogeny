@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.4 (Minecraft 26.3)
+
+### Biomes and caves
+- **Yellowstone** redesigned after the real park: lodgepole pine stands with open meadows, standing dead trunks from old fires and young regrowth; pale sinter flats with sulfur specks; yellow, orange and white rock on steep faces; hot springs ringed by bands of colour like Grand Prismatic Spring (yellow with sulfur, orange with cinnabar, brown, then a white sinter apron), some boiling, and bubbling mud pots. Geysers stay.
+- **Yosemite** redesigned: pale granite walls with diorite, calcite and andesite bodies, grassy ledges and waterfalls; the valley floor is open woodland of ponderosa pine, incense cedar and black oak with the odd giant sequoia, and meadow flowers.
+- **Fumarole caves** replace the frostfire caves: caves melted into ice by volcanic heat under cold ground, with ice walls and icicles, snow and ice floors, magma seams, steaming sulfur pools and sulfur crusts, and a pale haze with drifting ash.
+- **Deep dark infestation** replaces the deep dark incursion: the deep dark creeping up into ordinary caves 60-140 blocks underground, with sculk veins over the walls, sculk mats, sculk stalks topped with sensors, sculk dripping from the ceiling and the odd shrieker.
+- **Redwood forests** are much bigger: each forest is on average about ten times the area it was.
+
+These four biomes no longer reuse other mods' design data. Worlds made before 1.0.4 keep their already generated terrain; new chunks use the new designs. Caves already saved as frostfire caves or deep dark incursion keep their blocks, but Minecraft will log a warning for the missing biome and show a default biome there.
+
 ## 1.0.3 (Minecraft 26.3)
 
 ### Rivers and lakes

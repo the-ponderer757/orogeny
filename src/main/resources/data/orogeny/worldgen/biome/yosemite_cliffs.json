@@ -41,7 +41,7 @@
             },
             {
               "type": "minecraft:wolf",
-              "count": 2,
+              "count": 4,
               "weight": 8
             },
             {
@@ -57,8 +57,8 @@
               "type": "minecraft:fox",
               "count": {
                 "type": "minecraft:uniform",
-                "max_inclusive": 2,
-                "min_inclusive": 1
+                "max_inclusive": 4,
+                "min_inclusive": 2
               },
               "weight": 8
             }
@@ -124,17 +124,16 @@
       },
       "modifier": "overlay"
     },
-    "minecraft:visual/sky_color": "#7da3ff",
-    "minecraft:visual/fog_color": "#c0d8ff"
+    "minecraft:visual/sky_color": "#7ca3ff"
   },
   "carvers": [
     "minecraft:cave",
     "minecraft:cave_extra_underground",
     "minecraft:canyon"
   ],
-  "downfall": 0.8,
+  "downfall": 0.6,
   "effects": {
-    "water_color": "#3f76e4"
+    "water_color": "#3a6fd6"
   },
   "features": [
     [],
@@ -152,10 +151,11 @@
     ],
     [],
     [
-      "orogeny:tl_calcite",
-      "orogeny:tl_cliff_grass",
-      "orogeny:tl_diorite",
-      "orogeny:tl_waterfalls"
+      "orogeny:cliff_waterfalls",
+      "orogeny:granite_wall_andesite",
+      "orogeny:granite_wall_calcite",
+      "orogeny:granite_wall_diorite",
+      "orogeny:ledge_grass"
     ],
     [
       "minecraft:ore_dirt",
@@ -210,5 +210,5 @@
     ]
   ],
   "has_precipitation": true,
-  "temperature": 0.375
+  "temperature": 0.4
 }

@@ -1,8 +1,8 @@
 package com.github.xandergos.terraindiffusionmc.pipeline;
 
 /**
- * Per-block details inside the giant halls of part three round C (caves plan v1.5): stone pillars (made for the deep
- * dark incursion's hall, unused since Oct 27, when the incursion became WWOO's plain sculk caves) and the crystal beams
+ * Per-block details inside the giant halls of part three round C (caves plan v1.5): stone pillars (made for a sculk
+ * hall, unused since Oct 27) and the crystal beams
  * of the giant selenite chamber. Both are solid shapes kept standing in the hall's air ({@link CaveShapes} takes the
  * maximum with them where the hall is fully in), and world/CaveStone paints the beams (calcite).
  *
@@ -178,7 +178,7 @@ public final class CaveHalls {
             }
     }
 
-    // ---- Incursion pillars ----
+    // ---- Hall pillars (unused) ----
 
     /** Pillars sit on a jittered grid of this spacing (blocks). */
     public static final int PILLAR_CELL = 18;

@@ -89,7 +89,13 @@ public final class RegionalBiomes {
     /** Aspen groves on cool mountainsides (Calvin, Oct 22). */
     static final float ASPEN_GROVE_SHARE = 0.3f;
     static final float BOREAL_SHARE = 0.55f, SIBERIAN_SHARE = 0.55f, BIRCH_TAIGA_SHARE = 0.22f;
-    static final float REDWOODS_SHARE = 0.18f, RAINFOREST_SHARE = 0.6f, CLOUD_FOREST_SHARE = 0.6f;
+    static final float REDWOODS_SHARE = 0.24f, RAINFOREST_SHARE = 0.6f, CLOUD_FOREST_SHARE = 0.6f;
+    /**
+     * Redwood forests come in big stands (Calvin, Nov 2: "a large forest, not a small one"): their own patch size, so
+     * each forest averages ~110 km2 (was ~10) of suitable ground at the default biome size, with a slightly larger share
+     * so they don't become much rarer.
+     */
+    private static final float REDWOODS_M = 10000f;
     static final float ASPEN_SHARE = 0.45f, MOORLAND_SHARE = 0.4f, STEPPE_SHARE = 0.5f, PRAIRIE_SHARE = 0.5f;
     static final float MEDITERRANEAN_SHARE = 0.65f, TROPICAL_DRY_SHARE = 0.6f, ROCKY_DESERT_SHARE = 0.7f;
     /** v1.3 rare land biomes. */
@@ -187,7 +193,7 @@ public final class RegionalBiomes {
                 rule(s, BIRCH_TAIGA, MID_M, BIRCH_TAIGA_SHARE, p -> ramp(p.temp, 4f, 6f) * (1f - ramp(p.temp, 10f, 12f))
                         * ramp(p.treeMoisture, 0.6f, 0.8f), TAIGA, TAIGA_SPARSE, FOREST),
                 // Wet, cool, maritime forests: redwoods (rare) and temperate rainforest.
-                rule(s, REDWOODS, SMALL_M, REDWOODS_SHARE, p -> ramp(p.temp, 8f, 10f) * (1f - ramp(p.temp, 15f, 17f))
+                rule(s, REDWOODS, REDWOODS_M, REDWOODS_SHARE, p -> ramp(p.temp, 8f, 10f) * (1f - ramp(p.temp, 15f, 17f))
                         * ramp(p.treeMoisture, 0.9f, 1.15f) * (1f - ramp(p.altM, 1200f, 1600f))
                         * (1f - ramp(p.tSeason, 800f, 1100f)), FOREST, TAIGA),
                 rule(s, TEMPERATE_RAINFOREST, MID_M, RAINFOREST_SHARE, p -> ramp(p.effMoisture, 1.2f, 1.5f)

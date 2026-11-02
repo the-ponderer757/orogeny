@@ -34,7 +34,7 @@
             },
             {
               "type": "minecraft:wolf",
-              "count": 2,
+              "count": 4,
               "weight": 8
             },
             {
@@ -50,8 +50,8 @@
               "type": "minecraft:fox",
               "count": {
                 "type": "minecraft:uniform",
-                "max_inclusive": 2,
-                "min_inclusive": 1
+                "max_inclusive": 4,
+                "min_inclusive": 2
               },
               "weight": 8
             }
@@ -117,19 +117,18 @@
       },
       "modifier": "overlay"
     },
-    "minecraft:visual/sky_color": "#7da3ff",
-    "minecraft:visual/fog_color": "#c0d8ff"
+    "minecraft:visual/sky_color": "#7da3ff"
   },
   "carvers": [
     "minecraft:cave",
     "minecraft:cave_extra_underground",
     "minecraft:canyon"
   ],
-  "downfall": 0.8,
+  "downfall": 0.6,
   "effects": {
-    "water_color": "#3647aa",
-    "grass_color": "#598347",
-    "foliage_color": "#508231"
+    "water_color": "#3a6fd6",
+    "grass_color": "#79a35a",
+    "foliage_color": "#5c8f3e"
   },
   "features": [
     [],
@@ -175,8 +174,7 @@
       "minecraft:underwater_magma",
       "minecraft:disk_sand",
       "minecraft:disk_clay",
-      "minecraft:disk_gravel",
-      "orogeny:tl_andesite_disks"
+      "minecraft:disk_gravel"
     ],
     [],
     [
@@ -185,8 +183,9 @@
     ],
     [
       "minecraft:glow_lichen",
-      "minecraft:patch_large_fern",
-      "minecraft:patch_grass_taiga_2",
+      "orogeny:trees_yosemite",
+      "minecraft:patch_grass_meadow",
+      "minecraft:wildflowers_meadow",
       "minecraft:brown_mushroom_taiga",
       "minecraft:red_mushroom_taiga",
       "minecraft:brown_mushroom_normal",
@@ -194,14 +193,13 @@
       "minecraft:patch_pumpkin",
       "minecraft:patch_sugar_cane",
       "minecraft:patch_berry_common",
-      "orogeny:tl_dandelions",
-      "orogeny:tl_waterfalls",
-      "orogeny:tl_yosemite_oaks"
+      "minecraft:fallen_oak_tree",
+      "orogeny:cliff_waterfalls"
     ],
     [
       "minecraft:freeze_top_layer"
     ]
   ],
   "has_precipitation": true,
-  "temperature": 0.25
+  "temperature": 0.5
 }

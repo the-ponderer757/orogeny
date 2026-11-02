@@ -2132,25 +2132,74 @@
                     {
                       "type": "minecraft:condition",
                       "if_true": {
+                        "type": "minecraft:steep"
+                      },
+                      "then_run": {
+                        "type": "minecraft:condition",
+                        "if_true": {
+                          "type": "minecraft:noise_threshold",
+                          "noise": "orogeny:yellowstone/rhyolite",
+                          "min_threshold": 0.35,
+                          "max_threshold": 1.7976931348623157e+308
+                        },
+                        "then_run": {
+                          "type": "minecraft:block",
+                          "result_state": "minecraft:orange_terracotta"
+                        }
+                      }
+                    },
+                    {
+                      "type": "minecraft:condition",
+                      "if_true": {
+                        "type": "minecraft:steep"
+                      },
+                      "then_run": {
+                        "type": "minecraft:condition",
+                        "if_true": {
+                          "type": "minecraft:noise_threshold",
+                          "noise": "orogeny:yellowstone/rhyolite",
+                          "min_threshold": -0.3,
+                          "max_threshold": 1.7976931348623157e+308
+                        },
+                        "then_run": {
+                          "type": "minecraft:block",
+                          "result_state": "minecraft:yellow_terracotta"
+                        }
+                      }
+                    },
+                    {
+                      "type": "minecraft:condition",
+                      "if_true": {
+                        "type": "minecraft:steep"
+                      },
+                      "then_run": {
+                        "type": "minecraft:block",
+                        "result_state": "minecraft:white_terracotta"
+                      }
+                    },
+                    {
+                      "type": "minecraft:condition",
+                      "if_true": {
                         "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.925,
+                        "noise": "orogeny:yellowstone/sinter",
+                        "min_threshold": 0.62,
                         "max_threshold": 1.7976931348623157e+308
                       },
                       "then_run": {
                         "type": "minecraft:condition",
                         "if_true": {
-                          "type": "minecraft:not",
-                          "invert": {
-                            "type": "minecraft:steep"
-                          }
+                          "type": "minecraft:stone_depth",
+                          "offset": 0,
+                          "add_surface_depth": false,
+                          "secondary_depth_range": 0,
+                          "surface_type": "floor"
                         },
                         "then_run": {
                           "type": "minecraft:condition",
                           "if_true": {
                             "type": "minecraft:noise_threshold",
-                            "noise": "orogeny:yellowstone/gravel",
-                            "min_threshold": 0.25,
+                            "noise": "orogeny:yellowstone/meadow",
+                            "min_threshold": 0.55,
                             "max_threshold": 1.7976931348623157e+308
                           },
                           "then_run": {
@@ -2164,314 +2213,8 @@
                       "type": "minecraft:condition",
                       "if_true": {
                         "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.925,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:not",
-                          "invert": {
-                            "type": "minecraft:steep"
-                          }
-                        },
-                        "then_run": {
-                          "type": "minecraft:block",
-                          "result_state": "minecraft:yellow_terracotta"
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.875,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:not",
-                          "invert": {
-                            "type": "minecraft:steep"
-                          }
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:noise_threshold",
-                            "noise": "orogeny:yellowstone/gravel",
-                            "min_threshold": -1000000000.0,
-                            "max_threshold": -0.45
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:cinnabar"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.875,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:not",
-                          "invert": {
-                            "type": "minecraft:steep"
-                          }
-                        },
-                        "then_run": {
-                          "type": "minecraft:block",
-                          "result_state": "minecraft:red_sand"
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.815,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:block",
-                        "result_state": "minecraft:blackstone"
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.7250000000000001,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:block",
-                        "result_state": "minecraft:smooth_basalt"
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.6000000000000001,
-                        "max_threshold": 1.7976931348623157e+308
-                      },
-                      "then_run": {
-                        "type": "minecraft:block",
-                        "result_state": "minecraft:gravel"
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.5,
-                        "max_threshold": 0.6000000000000001
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.05,
-                          "max_threshold": 0.05
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:gravel"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.4,
-                        "max_threshold": 0.5
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.03,
-                          "max_threshold": 0.03
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:gravel"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.30000000000000004,
-                        "max_threshold": 0.4
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.015,
-                          "max_threshold": 0.015
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:gravel"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.48000000000000004,
-                        "max_threshold": 0.6000000000000001
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.08,
-                          "max_threshold": 0.08
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:calcite"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.36,
-                        "max_threshold": 0.48000000000000004
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.055,
-                          "max_threshold": 0.055
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:calcite"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.24000000000000002,
-                        "max_threshold": 0.36
-                      },
-                      "then_run": {
-                        "type": "minecraft:condition",
-                        "if_true": {
-                          "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/gravel",
-                          "min_threshold": -0.025,
-                          "max_threshold": 0.025
-                        },
-                        "then_run": {
-                          "type": "minecraft:condition",
-                          "if_true": {
-                            "type": "minecraft:stone_depth",
-                            "offset": 0,
-                            "add_surface_depth": false,
-                            "secondary_depth_range": 0,
-                            "surface_type": "floor"
-                          },
-                          "then_run": {
-                            "type": "minecraft:block",
-                            "result_state": "minecraft:calcite"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "minecraft:condition",
-                      "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/calcite_patch",
-                        "min_threshold": 0.42500000000000004,
+                        "noise": "orogeny:yellowstone/sinter",
+                        "min_threshold": 0.6,
                         "max_threshold": 1.7976931348623157e+308
                       },
                       "then_run": {
@@ -2482,19 +2225,36 @@
                     {
                       "type": "minecraft:condition",
                       "if_true": {
-                        "type": "minecraft:steep"
+                        "type": "minecraft:noise_threshold",
+                        "noise": "orogeny:yellowstone/sinter",
+                        "min_threshold": 0.53,
+                        "max_threshold": 1.7976931348623157e+308
+                      },
+                      "then_run": {
+                        "type": "minecraft:block",
+                        "result_state": "minecraft:diorite"
+                      }
+                    },
+                    {
+                      "type": "minecraft:condition",
+                      "if_true": {
+                        "type": "minecraft:stone_depth",
+                        "offset": 0,
+                        "add_surface_depth": false,
+                        "secondary_depth_range": 0,
+                        "surface_type": "floor"
                       },
                       "then_run": {
                         "type": "minecraft:condition",
                         "if_true": {
                           "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/calcite_cliff",
-                          "min_threshold": -0.4,
+                          "noise": "orogeny:yellowstone/meadow",
+                          "min_threshold": 0.6,
                           "max_threshold": 1.7976931348623157e+308
                         },
                         "then_run": {
                           "type": "minecraft:block",
-                          "result_state": "minecraft:calcite"
+                          "result_state": "minecraft:podzol"
                         }
                       }
                     },
@@ -2511,8 +2271,8 @@
                         "type": "minecraft:condition",
                         "if_true": {
                           "type": "minecraft:noise_threshold",
-                          "noise": "orogeny:yellowstone/dirt",
-                          "min_threshold": -0.45,
+                          "noise": "orogeny:yellowstone/meadow",
+                          "min_threshold": -0.55,
                           "max_threshold": 1.7976931348623157e+308
                         },
                         "then_run": {
@@ -2524,10 +2284,11 @@
                     {
                       "type": "minecraft:condition",
                       "if_true": {
-                        "type": "minecraft:noise_threshold",
-                        "noise": "orogeny:yellowstone/dirt",
-                        "min_threshold": -0.8,
-                        "max_threshold": 1.7976931348623157e+308
+                        "type": "minecraft:stone_depth",
+                        "offset": 0,
+                        "add_surface_depth": false,
+                        "secondary_depth_range": 0,
+                        "surface_type": "floor"
                       },
                       "then_run": {
                         "type": "minecraft:block",

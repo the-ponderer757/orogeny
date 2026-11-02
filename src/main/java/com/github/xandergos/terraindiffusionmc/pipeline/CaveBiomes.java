@@ -31,15 +31,15 @@ public final class CaveBiomes {
     public static final short DRIPSTONE_CAVES = 144;
     // Part two round A: the dry uncommon caves. Lush caves and thermal caves (vanilla 26.3's sulfur caves) are vanilla's.
     public static final short LUSH_CAVES = 145, FUNGAL_CAVES = 146, UNDERGROUND_JUNGLE = 147, ICY_CAVES = 148;
-    public static final short FROSTFIRE_CAVES = 149, THERMAL_CAVES = 150, INFESTED_CAVES = 151, SPIDER_NEST = 152;
+    public static final short FUMAROLE_CAVES = 149, THERMAL_CAVES = 150, INFESTED_CAVES = 151, SPIDER_NEST = 152;
     public static final short COPPER_CAVES = 153, SALT_CAVES = 154, MUD_CAVES = 155, BREAKDOWN_CHAMBERS = 156;
     // Part two round B: water caves (world/CaveWater fills them up to their region's water level).
     public static final short UNDERGROUND_LAKES = 157, GLOWWORM_GROTTO = 158, KARST_CAVES = 159;
     // Part three: rare (160-171) and very rare (172-174) caves. Round A built: molten cavern, mantle cave, crystalline
     // chasm, deep dark (vanilla's under mountains, Terra's copy elsewhere), lava tubes, slot canyon caves, glacier caves,
-    // giant geode hall. Round C: deep dark forest, deep dark incursion, giant selenite beams.
+    // giant geode hall. Round C: deep dark forest, deep dark infestation, giant selenite beams.
     public static final short MOLTEN_CAVERN = 160, MANTLE_CAVE = 161, CRYSTALLINE_CHASM = 162, DEEP_DARK = 163;
-    public static final short DEEP_DARK_FOREST = 164, DEEP_DARK_INCURSION = 172, GIANT_SELENITE_BEAMS = 174;
+    public static final short DEEP_DARK_FOREST = 164, DEEP_DARK_INFESTATION = 172, GIANT_SELENITE_BEAMS = 174;
     public static final short LAVA_TUBES = 165, SLOT_CANYON_CAVES = 166, GLACIER_CAVES = 167;
     public static final short GIANT_GEODE_HALL = 173, DEEP_DARK_CAVES = 175;
     /**
@@ -63,7 +63,7 @@ public final class CaveBiomes {
         NAMES.put(FUNGAL_CAVES, "orogeny:fungal_caves");
         NAMES.put(UNDERGROUND_JUNGLE, "orogeny:underground_jungle");
         NAMES.put(ICY_CAVES, "orogeny:icy_caves");
-        NAMES.put(FROSTFIRE_CAVES, "orogeny:frostfire_caves");
+        NAMES.put(FUMAROLE_CAVES, "orogeny:fumarole_caves");
         NAMES.put(THERMAL_CAVES, "minecraft:sulfur_caves");
         NAMES.put(INFESTED_CAVES, "orogeny:infested_caves");
         NAMES.put(SPIDER_NEST, "orogeny:spider_nest");
@@ -88,7 +88,7 @@ public final class CaveBiomes {
         NAMES.put(BLUE_HOLE, "orogeny:blue_hole");
         NAMES.put(DEEP_SHAFT, "orogeny:deep_shaft");
         NAMES.put(DEEP_DARK_FOREST, "orogeny:deep_dark_forest");
-        NAMES.put(DEEP_DARK_INCURSION, "orogeny:deep_dark_incursion");
+        NAMES.put(DEEP_DARK_INFESTATION, "orogeny:deep_dark_infestation");
         NAMES.put(GIANT_SELENITE_BEAMS, "orogeny:giant_selenite_beams");
     }
 
@@ -339,11 +339,11 @@ public final class CaveBiomes {
 
     /**
      * The uncommon caves built so far and their weights among the caves that fit a region. Gated caves (lush, jungle,
-     * icy, frostfire, thermal, salt, mud) only fit under the right surface; the others fit anywhere, so the tier keeps
+     * icy, fumarole, thermal, salt, mud) only fit under the right surface; the others fit anywhere, so the tier keeps
      * its share everywhere and gated caves take a large part of it where they fit. The fungal cave is uncommon on
      * purpose, not a flagship.
      */
-    private static final short[] UNCOMMON = {LUSH_CAVES, FUNGAL_CAVES, UNDERGROUND_JUNGLE, ICY_CAVES, FROSTFIRE_CAVES,
+    private static final short[] UNCOMMON = {LUSH_CAVES, FUNGAL_CAVES, UNDERGROUND_JUNGLE, ICY_CAVES, FUMAROLE_CAVES,
             THERMAL_CAVES, INFESTED_CAVES, SPIDER_NEST, COPPER_CAVES, SALT_CAVES, MUD_CAVES, BREAKDOWN_CHAMBERS,
             UNDERGROUND_LAKES, GLOWWORM_GROTTO, KARST_CAVES, DEEP_DARK};
     /**
@@ -382,11 +382,10 @@ public final class CaveBiomes {
      * Terra's copy of it, without ancient cities, everywhere else deep down.
      */
     private static final short[] RARE = {MOLTEN_CAVERN, MANTLE_CAVE, CRYSTALLINE_CHASM, LAVA_TUBES, SLOT_CANYON_CAVES,
-            GLACIER_CAVES, CANYON_RAVINE, SINKHOLE_JUNGLE, BLUE_HOLE, DEEP_SHAFT, DEEP_DARK_FOREST, DEEP_DARK_INCURSION};
+            GLACIER_CAVES, CANYON_RAVINE, SINKHOLE_JUNGLE, BLUE_HOLE, DEEP_SHAFT, DEEP_DARK_FOREST, DEEP_DARK_INFESTATION};
     // Surface cuts (ravine, sinkhole jungle, blue hole, deep shaft) weigh more since Oct 27: regions are five times
     // bigger, and Calvin wants many more big holes, chasms and ravines.
-    // The incursion (WWOO's, Oct 27) moved here from very rare: its own gates (cool humid ground, 45-115 blocks down)
-    // already keep it scarce.
+    // The infestation (Nov 2) has its own gates (temperate ground, 60-140 blocks down), which keep it scarce.
     private static final float[] RARE_WEIGHT = {6f, 6f, 5f, 10f, 10f, 10f, 20f, 10f, 14f, 14f, 8f, 20f};
     private static final short[] VERY_RARE = {GIANT_GEODE_HALL, GIANT_SELENITE_BEAMS};
     private static final float[] VERY_RARE_WEIGHT = {0.5f, 0.4f};
@@ -424,9 +423,9 @@ public final class CaveBiomes {
                 if (nearWater < 0) nearWater = surface != null && surface.nearInlandWater(anchorX(cell), anchorZ(cell)) ? 1 : 0;
                 ok = nearWater == 1;
             }
-            if (ok && id == DEEP_DARK_INCURSION) {
+            if (ok && id == DEEP_DARK_INFESTATION) {
                 if (ground == Integer.MIN_VALUE + 1) ground = surface == null ? Integer.MIN_VALUE : surface.groundTop(anchorX(cell), anchorZ(cell));
-                ok = ground != Integer.MIN_VALUE && y <= ground - INCURSION_MIN_DEPTH && y >= ground - INCURSION_MAX_DEPTH;
+                ok = ground != Integer.MIN_VALUE && y <= ground - INFESTATION_MIN_DEPTH && y >= ground - INFESTATION_MAX_DEPTH;
             }
             if (ok && isSurfaceCut(id)) {
                 if (ground == Integer.MIN_VALUE + 1) ground = surface == null ? Integer.MIN_VALUE : surface.groundTop(anchorX(cell), anchorZ(cell));
@@ -455,10 +454,10 @@ public final class CaveBiomes {
     }
 
     /**
-     * WWOO's incursion sits at multi-noise depth 0.35 to 0.9 (about 45 to 115 blocks under the surface), well above
-     * vanilla's deep dark (1.1 and deeper). Here: the region's middle that far under the ground at its anchor.
+     * The deep dark infestation: the region's middle this far (blocks) under the ground at its anchor, between the
+     * ordinary caves and the deep dark's own layer.
      */
-    public static int INCURSION_MIN_DEPTH = 45, INCURSION_MAX_DEPTH = 115;
+    public static int INFESTATION_MIN_DEPTH = 60, INFESTATION_MAX_DEPTH = 140;
 
     /** Surface cuts (round B): their region must be the one just under the ground, and the ground must suit them. */
     public static boolean isSurfaceCut(short id) {
@@ -502,7 +501,8 @@ public final class CaveBiomes {
             case LUSH_CAVES -> y <= VANILLA_FEATURE_MAX_Y && in(HUMID, anchorBiome);
             case UNDERGROUND_JUNGLE -> in(TROPICAL, anchorBiome);
             case ICY_CAVES -> in(COLD, anchorBiome);
-            case FROSTFIRE_CAVES -> in(COLD, anchorBiome) && y <= 30;   // as Terralith's: below Y 30
+            // Ice melted by volcanic heat just under cold ground: the upper caves under snow and ice.
+            case FUMAROLE_CAVES -> in(COLD, anchorBiome) && y >= 0;
             case THERMAL_CAVES -> y <= VANILLA_FEATURE_MAX_Y && in(THERMAL_GROUND, anchorBiome);
             case SALT_CAVES -> in(DRY, anchorBiome);
             case MUD_CAVES -> in(WET, anchorBiome) && y >= -16;
@@ -518,10 +518,9 @@ public final class CaveBiomes {
             case GIANT_GEODE_HALL -> y <= 30;
             // Round C: the deep dark forest in the deepest layers; selenite beams deep or under hot ground.
             case DEEP_DARK_FOREST -> y <= -8;
-            // WWOO's incursion (temperature -0.13 to -0.08, humidity 0.7 and up): under cool, humid ground; its depth
-            // below the ground is checked in fromTier.
-            case DEEP_DARK_INCURSION -> in(HUMID, anchorBiome) && !in(TROPICAL, anchorBiome) && !in(COLD, anchorBiome)
-                    && !in(HOT_GROUND, anchorBiome);
+            // The infestation: under temperate ground (not tropical, dry or volcanic); its depth below the ground is
+            // checked in fromTier.
+            case DEEP_DARK_INFESTATION -> !in(TROPICAL, anchorBiome) && !in(DRY, anchorBiome) && !in(HOT_GROUND, anchorBiome);
             case GIANT_SELENITE_BEAMS -> y <= 0 || (in(HOT_GROUND, anchorBiome) && y <= 40);
             // Water caves: above the lava of the deepest caves.
             case UNDERGROUND_LAKES -> y >= WATER_MIN_Y;
@@ -641,7 +640,7 @@ public final class CaveBiomes {
         };
     }
 
-    /** Hall details CaveHalls adds per block: none, stone pillars (unused since the incursion became WWOO's), crystal beams (selenite). */
+    /** Hall details CaveHalls adds per block: none, stone pillars (unused), crystal beams (selenite). */
     public static final int DETAIL_NONE = 0, DETAIL_PILLARS = 1, DETAIL_BEAMS = 2;
 
     public static int hallDetail(short id) {

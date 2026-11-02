@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:simple_block",
+  "to_place": {
+    "type": "minecraft:weighted",
+    "entries": [
+      {
+        "data": "minecraft:short_grass",
+        "weight": 40
+      },
+      {
+        "data": "minecraft:fern",
+        "weight": 12
+      },
+      {
+        "data": {
+          "id": "minecraft:tall_grass",
+          "properties": {
+            "half": "lower"
+          }
+        },
+        "weight": 6
+      },
+      {
+        "data": "minecraft:cornflower",
+        "weight": 2
+      }
+    ]
+  }
+}

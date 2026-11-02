@@ -53,7 +53,7 @@ public final class CaveView {
         COLORS.put(CaveBiomes.FUNGAL_CAVES, "#b04ad0");
         COLORS.put(CaveBiomes.UNDERGROUND_JUNGLE, "#2f8f3a");
         COLORS.put(CaveBiomes.ICY_CAVES, "#9fd8f0");
-        COLORS.put(CaveBiomes.FROSTFIRE_CAVES, "#5a8fe0");
+        COLORS.put(CaveBiomes.FUMAROLE_CAVES, "#5a8fe0");
         COLORS.put(CaveBiomes.THERMAL_CAVES, "#e3c34a");
         COLORS.put(CaveBiomes.INFESTED_CAVES, "#7d7a6a");
         COLORS.put(CaveBiomes.SPIDER_NEST, "#c8c8c8");
@@ -78,7 +78,7 @@ public final class CaveView {
         COLORS.put(CaveBiomes.BLUE_HOLE, "#1f5fbf");
         COLORS.put(CaveBiomes.DEEP_SHAFT, "#4a4a58");
         COLORS.put(CaveBiomes.DEEP_DARK_FOREST, "#167d6a");
-        COLORS.put(CaveBiomes.DEEP_DARK_INCURSION, "#06323a");
+        COLORS.put(CaveBiomes.DEEP_DARK_INFESTATION, "#06323a");
         COLORS.put(CaveBiomes.GIANT_SELENITE_BEAMS, "#f0ead2");
     }
 

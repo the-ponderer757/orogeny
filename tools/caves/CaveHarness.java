@@ -63,7 +63,7 @@ public class CaveHarness {
             case CaveBiomes.FUNGAL_CAVES -> rgb(176, 74, 208);
             case CaveBiomes.UNDERGROUND_JUNGLE -> rgb(47, 143, 58);
             case CaveBiomes.ICY_CAVES -> rgb(159, 216, 240);
-            case CaveBiomes.FROSTFIRE_CAVES -> rgb(90, 143, 224);
+            case CaveBiomes.FUMAROLE_CAVES -> rgb(90, 143, 224);
             case CaveBiomes.THERMAL_CAVES -> rgb(227, 195, 74);
             case CaveBiomes.INFESTED_CAVES -> rgb(125, 122, 106);
             case CaveBiomes.SPIDER_NEST -> rgb(200, 200, 200);

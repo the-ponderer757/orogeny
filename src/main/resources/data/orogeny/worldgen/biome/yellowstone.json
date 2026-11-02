@@ -34,7 +34,7 @@
             },
             {
               "type": "minecraft:wolf",
-              "count": 2,
+              "count": 4,
               "weight": 8
             },
             {
@@ -50,8 +50,8 @@
               "type": "minecraft:fox",
               "count": {
                 "type": "minecraft:uniform",
-                "max_inclusive": 2,
-                "min_inclusive": 1
+                "max_inclusive": 4,
+                "min_inclusive": 2
               },
               "weight": 8
             }
@@ -117,18 +117,18 @@
       },
       "modifier": "overlay"
     },
-    "minecraft:visual/sky_color": "#77a8ff",
-    "minecraft:visual/fog_color": "#e0e9ff"
+    "minecraft:visual/sky_color": "#7da3ff"
   },
   "carvers": [
     "minecraft:cave",
     "minecraft:cave_extra_underground",
     "minecraft:canyon"
   ],
-  "downfall": 0.8,
+  "downfall": 0.6,
   "effects": {
-    "water_color": "#77e0f7",
-    "grass_color": "#c6d097"
+    "water_color": "#4fb7d9",
+    "grass_color": "#9fb06a",
+    "foliage_color": "#5b7f45"
   },
   "features": [
     [],
@@ -183,25 +183,19 @@
     ],
     [
       "minecraft:glow_lichen",
-      "minecraft:patch_large_fern",
-      "minecraft:flower_default",
-      "minecraft:patch_grass_taiga_2",
+      "orogeny:trees_yellowstone",
+      "minecraft:patch_grass_meadow",
+      "minecraft:wildflowers_meadow",
       "minecraft:brown_mushroom_taiga",
       "minecraft:red_mushroom_taiga",
-      "minecraft:brown_mushroom_normal",
-      "minecraft:red_mushroom_normal",
-      "minecraft:patch_pumpkin",
-      "minecraft:patch_sugar_cane",
-      "minecraft:patch_berry_common",
-      "orogeny:tl_yellowstone_birches",
-      "orogeny:tl_yellowstone_birches_alt",
-      "orogeny:tl_yellowstone_spruces",
-      "orogeny:tl_yellowstone_spruces_alt"
+      "minecraft:fallen_spruce_tree",
+      "orogeny:burned_snags",
+      "orogeny:yellowstone_regrowth"
     ],
     [
       "minecraft:freeze_top_layer"
     ]
   ],
   "has_precipitation": true,
-  "temperature": 0.25
+  "temperature": 0.3
 }

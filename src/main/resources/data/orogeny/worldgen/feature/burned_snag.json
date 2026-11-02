@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:block_column",
+  "allowed_placement": {
+    "type": "minecraft:matching_blocks",
+    "blocks": [
+      "minecraft:air"
+    ]
+  },
+  "direction": "up",
+  "prioritize_tip": false,
+  "layers": [
+    {
+      "height": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 11,
+        "min_inclusive": 4
+      },
+      "provider": {
+        "id": "minecraft:stripped_spruce_log",
+        "properties": {
+          "axis": "y"
+        }
+      }
+    }
+  ]
+}

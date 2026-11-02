@@ -53,7 +53,7 @@ public abstract class ChunkGeneratorMixin {
             // never let this break chunk generation
         }
         com.github.xandergos.terraindiffusionmc.world.Waterfalls.place(level, chunk);
-        com.github.xandergos.terraindiffusionmc.world.FrostfireCaves.finish(level, chunk);
+        com.github.xandergos.terraindiffusionmc.world.FumaroleCaves.finish(level, chunk);
         com.github.xandergos.terraindiffusionmc.world.CaveWaterDrain.finish(level, chunk);
         com.github.xandergos.terraindiffusionmc.world.Icebergs.cleanAfterFeatures(level, chunk, self.getSeaLevel());
         com.github.xandergos.terraindiffusionmc.world.Icebergs.spawnBears(level, chunk, self.getSeaLevel());

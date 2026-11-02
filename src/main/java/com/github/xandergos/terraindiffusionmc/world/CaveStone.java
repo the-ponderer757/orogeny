@@ -38,7 +38,7 @@ public final class CaveStone {
     // Part three round A.
     private static final byte MOLTEN = 7, TUBES = 8, CRYSTAL = 9, SLOT = 10, GLACIER = 11, GEODE = 12;
     // Round C.
-    // 13 was the incursion's pillars (polished basalt) until the incursion became WWOO's plain sculk caves (Oct 27).
+    // 13 was a hall's pillars (polished basalt); unused since Oct 27.
     private static final byte SELENITE = 14;
     private static final ResourceKey<Biome> GIANT_SELENITE_BEAMS = key("giant_selenite_beams");
     /** The selenite chamber's hot walls: granite and tuff with smooth basalt and magma seams. */

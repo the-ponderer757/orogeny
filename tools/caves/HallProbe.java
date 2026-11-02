@@ -4,7 +4,7 @@ import javax.imageio.ImageIO;
 import java.io.File;
 
 /**
- * Hall probe (caves plan v1.5 part three round C): finds a deep dark forest, a deep dark incursion and a giant selenite
+ * Hall probe (caves plan v1.5 part three round C): finds a deep dark forest, a deep dark infestation and a giant selenite
  * chamber over flat synthetic ground, renders a plan slice and a vertical section through each (air black, rock grey,
  * pillars and beams coloured), and checks seams (fill at two chunk alignments and the single-block query agree).
  *
@@ -24,7 +24,7 @@ public class HallProbe {
 
     public static void main(String[] a) throws Exception {
         String out = a.length > 0 ? a[0] : ".";
-        short[] want = {CaveBiomes.DEEP_DARK_FOREST, CaveBiomes.DEEP_DARK_INCURSION, CaveBiomes.GIANT_SELENITE_BEAMS};
+        short[] want = {CaveBiomes.DEEP_DARK_FOREST, CaveBiomes.DEEP_DARK_INFESTATION, CaveBiomes.GIANT_SELENITE_BEAMS};
         int[] counts = new int[3];
         long[] found = new long[3];
         boolean[] have = new boolean[3];
@@ -42,9 +42,9 @@ public class HallProbe {
                         if (!have[k]) { found[k] = ucell; have[k] = true; }
                     }
             }
-        System.out.printf("deep cells sampled %d: forest %d (%.2f%%), incursion %d (%.2f%%), selenite %d (%.2f%%)%n", cells,
+        System.out.printf("deep cells sampled %d: forest %d (%.2f%%), infestation %d (%.2f%%), selenite %d (%.2f%%)%n", cells,
                 counts[0], 100.0 * counts[0] / cells, counts[1], 100.0 * counts[1] / cells, counts[2], 100.0 * counts[2] / cells);
-        String[] names = {"forest", "incursion", "selenite"};
+        String[] names = {"forest", "infestation", "selenite"};
         for (int k = 0; k < 3; k++) {
             if (!have[k]) { System.out.println("no " + names[k] + " found"); continue; }
             long cell = found[k];
@@ -94,8 +94,8 @@ public class HallProbe {
         int W = 280;
         float rx = CaveBiomes.hallRX(id), ry = CaveBiomes.hallRY(id);
         CaveHalls.Beam[] beams = id == CaveBiomes.GIANT_SELENITE_BEAMS ? CaveHalls.beams(SEED, cx, cy, cz, rx, ry) : null;
-        // Plan at the floor + 3 (forest, selenite) or the centre (incursion), section along x through the centre.
-        int planY = id == CaveBiomes.DEEP_DARK_INCURSION ? cy - 8 : (int) (cy - CaveBiomes.hallFloor(id)) + 3;
+        // Plan at the floor + 3 (forest, selenite) or the centre (infestation), section along x through the centre.
+        int planY = id == CaveBiomes.DEEP_DARK_INFESTATION ? cy - 8 : (int) (cy - CaveBiomes.hallFloor(id)) + 3;
         // The section runs along x at the z (within 20 of the centre) that crosses the most rock inside the hall.
         int secZ = 140, bestRock = -1;
         for (int Z = 120; Z <= 160; Z++) {
@@ -126,7 +126,7 @@ public class HallProbe {
 
     static int color(float d, short id, CaveHalls.Beam[] beams, int x, int y, int z, int cx, int cy, int cz, float rx, float ry) {
         if (d <= 0) return 0x101014;
-        if (id == CaveBiomes.DEEP_DARK_INCURSION && CaveHalls.pillar(SEED, x, y, z, cx, cy, cz, rx, ry) >= -0.5f) return 0x8a8f99;
+        if (id == CaveBiomes.DEEP_DARK_INFESTATION && CaveHalls.pillar(SEED, x, y, z, cx, cy, cz, rx, ry) >= -0.5f) return 0x8a8f99;
         if (beams != null) {
             CaveHalls.Beam b = CaveHalls.beamAt(beams, x, y, z);
             if (b != null) return CaveHalls.isTip(b, x, y, z) ? 0x9a5cd6 : 0xf2efe6;

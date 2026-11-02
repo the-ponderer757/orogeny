@@ -27,7 +27,7 @@ public final class CaveFormationLayout {
             case CaveBiomes.DRIPSTONE_CAVES -> K_DRIP;
             case CaveBiomes.UNDERGROUND_LAKES, CaveBiomes.GLOWWORM_GROTTO, CaveBiomes.KARST_CAVES -> K_KARST;
             case CaveBiomes.SALT_CAVES -> K_SALT;
-            case CaveBiomes.ICY_CAVES, CaveBiomes.GLACIER_CAVES -> K_ICE;   // frostfire caves have Terralith's own pillars
+            case CaveBiomes.ICY_CAVES, CaveBiomes.GLACIER_CAVES -> K_ICE;
             case CaveBiomes.THERMAL_CAVES -> K_THERMAL;   // travertine terraces only (round B)
             // Their own look already (fungal, jungle, mud, lush, thermal, the rare caves and halls, the cuts).
             default -> K_NONE;

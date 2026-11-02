@@ -6,30 +6,26 @@ import com.github.xandergos.terraindiffusionmc.pipeline.LocalTerrainProvider;
 import com.github.xandergos.terraindiffusionmc.pipeline.LocalTerrainProvider.HeightmapData;
 import com.github.xandergos.terraindiffusionmc.pipeline.RegionalBiomes;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.BubbleColumnBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Yellowstone's pools, Terralith's way (Oct 27), right after the terrain pass. Terralith scatters small pools over its
- * Yellowstone and stains everything around the water with "acid" disks: yellow terracotta at the water's edge, then red
- * sand, blackstone, smooth basalt and gravel further out, magma on the beds and lit campfires under some of that magma
- * whose smoke rises through the water like steam. Terralith's pools sit at sea level (its Yellowstone does); Terra's
- * lie in hollows of the ground wherever Yellowstone is, at the level of the lowest ground around each one.
+ * Yellowstone's hot springs and mud pots (Nov 2), right after the terrain pass. Small pools lie in hollows of the
+ * ground wherever Yellowstone is, at the level of the lowest ground around each one. A hot spring is clear water over a
+ * blue centre and a white sinter lining, ringed by bands of colour where the water cools as it spreads, like Grand
+ * Prismatic Spring's bacterial mats: yellow (with sulfur crusts) at the water's edge, then orange (with specks of
+ * cinnabar), then patchy brown, then a pale apron of sinter. A third of them boil (a bubble column over soul sand). A
+ * fifth of the pools are mud pots instead: grey mud bubbling in a ring of packed mud and coarse dirt.
  *
  * <p>One candidate pool per {@link #CELL}-block cell; it forms where the tile's biome is Yellowstone and no river or
  * lake runs. Every test reads the tiles (neighbouring ones too), so pools across chunk and tile edges come out whole.
- *
- * <p>Oct 27 (Calvin): fewer pools with narrower stains, so the ground between is mostly grass and coarse dirt as in
- * Terralith; sulfur crusts and specks of cinnabar (26.3's blocks) in the stains; geysers (Geothermal's sinter cones with
- * a vanilla geyser in the crater) here and there; and nothing is built over a cave that opens to the sky (pools hung in
- * the air over a collapse).
+ * Geysers (Geothermal's sinter cones with a vanilla geyser in the crater) stand here and there, and nothing is built
+ * over a cave that opens to the sky (pools hung in the air over a collapse).
  */
 public final class Yellowstone {
     private static final Logger LOG = LoggerFactory.getLogger(Yellowstone.class);
@@ -131,7 +127,7 @@ public final class Yellowstone {
                              double r, long h) {
         if (!isYellowstone(data, startX, startZ, cx, cz)) return;
         int size = TerrainDiffusionConfig.tileSize(), shift = Integer.numberOfTrailingZeros(size);
-        int depth = r > 3 ? 2 : 1;
+        int depth = r > 3 ? 3 : 2;
         int R = (int) Math.ceil(r * 1.25) + 9;
         // The water level: the lowest ground in and just around the pool; no pool where a river or lake already runs.
         int level = Integer.MAX_VALUE;
@@ -152,58 +148,63 @@ public final class Yellowstone {
         int x0 = cp.getMinBlockX(), z0 = cp.getMinBlockZ();
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         BlockState air = Blocks.AIR.defaultBlockState(), water = Blocks.WATER.defaultBlockState();
+        BlockState bubbles = Blocks.BUBBLE_COLUMN.defaultBlockState().setValue(BubbleColumnBlock.DRAG_DOWN, false);
+        boolean mudPot = r < 3.0 && unit(mix(h + 11)) < MUD_POT_CHANCE / 0.5;
+        boolean boiling = mudPot || unit(mix(h + 12)) < BOILING_CHANCE;
         for (int z = Math.max(z0, cz - R); z <= Math.min(z0 + 15, cz + R); z++) {
             for (int x = Math.max(x0, cx - R); x <= Math.min(x0 + 15, cx + R); x++) {
                 double d = edgeDist(x, z, cx, cz);
                 int top = VolcanicSurfaces.tileTop(data, startX, startZ, x, z, scale);
                 if (d < r) {
                     double f = d / r;
-                    int dep = Math.max(1, (int) Math.round(depth * (1 - f * f)));
+                    int dep = mudPot ? 1 : Math.max(1, (int) Math.round(depth * (1 - f * f)));
                     for (int y = level + 1; y <= Math.max(top, level) + 2; y++) chunk.setBlockState(pos.set(x, y, z), air, 0);
-                    for (int y = level - dep + 1; y <= level; y++) chunk.setBlockState(pos.set(x, y, z), water, 0);
-                    // The bed: magma (Terralith's underwater magma) in patches, red sand and blackstone stains elsewhere;
-                    // under some of the magma a lit campfire, whose smoke rises out of the pool.
-                    long bh = mix(h ^ ((long) x * 0x9E3779B97F4A7C15L) ^ ((long) z * 0xC2B2AE3D27D4EB4FL));
-                    int bed = level - dep;
-                    if (unit(bh) < 0.3) {
-                        chunk.setBlockState(pos.set(x, bed, z), Blocks.MAGMA_BLOCK.defaultBlockState(), 0);
-                        if (unit(mix(bh + 1)) < 0.3) {
-                            BlockState fire = Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true)
-                                    .setValue(CampfireBlock.SIGNAL_FIRE, unit(mix(bh + 2)) < 0.25)
-                                    .setValue(CampfireBlock.FACING, Direction.NORTH);
-                            chunk.setBlockState(pos.set(x, bed - 1, z), fire, 0);
-                            chunk.setBlockEntity(new CampfireBlockEntity(pos.immutable(), fire));
-                        }
-                    } else {
-                        chunk.setBlockState(pos.set(x, bed, z), RING.GetNoise(x * 2f, z * 2f) > 0.1f
-                                ? Blocks.BLACKSTONE.defaultBlockState() : Blocks.RED_SAND.defaultBlockState(), 0);
-                    }
+                    boolean vent = boiling && d < 0.8;
+                    for (int y = level - dep + 1; y <= level; y++) chunk.setBlockState(pos.set(x, y, z), vent ? bubbles : water, 0);
+                    BlockState floor = vent ? Blocks.SOUL_SAND.defaultBlockState()
+                            : mudPot ? Blocks.MUD.defaultBlockState()
+                            : f < 0.45 ? Blocks.DYED_TERRACOTTA.cyan().defaultBlockState()
+                            : Blocks.DYED_TERRACOTTA.white().defaultBlockState();
+                    chunk.setBlockState(pos.set(x, level - dep, z), floor, 0);
                     continue;
                 }
-                // The stained rim (Terralith's acid disks around the water): yellow with sulfur crusts, red with specks of
-                // cinnabar, black, grey, then a little gravel. Narrower than before, so grass shows between the pools.
                 double q = d - r + 0.9 * RING.GetNoise(x, z);
                 long sh = mix(h ^ ((long) x * 0x9E3779B97F4A7C15L) ^ ((long) z * 0xC2B2AE3D27D4EB4FL) ^ 0x5A1FL);
                 BlockState ring;
-                if (q < 1.0) ring = RING.GetNoise(x * 2.3f + 500, z * 2.3f) > 0.15f ? Blocks.SULFUR.defaultBlockState()
-                        : Blocks.DYED_TERRACOTTA.yellow().defaultBlockState();
-                else if (q < 2.2) ring = unit(sh) < 0.14 ? Blocks.CINNABAR.defaultBlockState() : Blocks.RED_SAND.defaultBlockState();
-                else if (q < 2.9) ring = Blocks.BLACKSTONE.defaultBlockState();
-                else if (q < 3.8) ring = Blocks.SMOOTH_BASALT.defaultBlockState();
-                else if (q < 5.0 && RING.GetNoise(x * 1.7f + 300, z * 1.7f) > 0.1f) ring = Blocks.GRAVEL.defaultBlockState();
-                else continue;
+                if (mudPot) {
+                    // Mud spattered round the pot: packed mud, then coarse dirt.
+                    if (q < 1.2) ring = Blocks.PACKED_MUD.defaultBlockState();
+                    else if (q < 2.2 && RING.GetNoise(x * 1.7f + 300, z * 1.7f) > -0.2f) ring = Blocks.COARSE_DIRT.defaultBlockState();
+                    else continue;
+                } else if (q < 1.0) {
+                    // The warmest mats: yellow, crusted with sulfur in patches.
+                    ring = RING.GetNoise(x * 2.3f + 500, z * 2.3f) > 0.2f ? Blocks.SULFUR.defaultBlockState()
+                            : Blocks.DYED_TERRACOTTA.yellow().defaultBlockState();
+                } else if (q < 2.0) {
+                    ring = unit(sh) < 0.12 ? Blocks.CINNABAR.defaultBlockState() : Blocks.DYED_TERRACOTTA.orange().defaultBlockState();
+                } else if (q < 2.8) {
+                    if (RING.GetNoise(x * 1.3f + 100, z * 1.3f) < -0.15f) continue;
+                    ring = Blocks.DYED_TERRACOTTA.brown().defaultBlockState();
+                } else if (q < 3.8 && RING.GetNoise(x * 1.7f + 300, z * 1.7f) > -0.1f) {
+                    // The sinter apron the spring has laid down.
+                    ring = RING.GetNoise(x * 3.1f, z * 3.1f + 700) > 0.25f ? Blocks.DYED_TERRACOTTA.white().defaultBlockState()
+                            : Blocks.CALCITE.defaultBlockState();
+                } else {
+                    continue;
+                }
                 int y = top;
                 BlockState above = chunk.getBlockState(pos.set(x, y + 1, z));
-                if (above.is(Blocks.SNOW) || above.is(Blocks.SHORT_GRASS) || above.is(Blocks.FERN)) chunk.setBlockState(pos, air, 0);
+                // Plants and snow on the ground give way (grass, ferns, flowers: any replaceable plant).
+                if (!above.isAir() && above.canBeReplaced() && above.getFluidState().isEmpty()) chunk.setBlockState(pos, air, 0);
                 BlockState st = chunk.getBlockState(pos.set(x, y, z));
                 if (st.isAir() || !st.getFluidState().isEmpty()) continue;
                 chunk.setBlockState(pos, ring, 0);
-                // Red sand needs a floor under it (it falls): keep the block below solid.
-                BlockState below = chunk.getBlockState(pos.set(x, y - 1, z));
-                if (below.isAir()) chunk.setBlockState(pos, Blocks.CALCITE.defaultBlockState(), 0);
             }
         }
     }
+
+    /** Share of pools (small ones only) that are mud pots, and of hot springs that boil. */
+    private static final double MUD_POT_CHANCE = 0.2, BOILING_CHANCE = 0.33;
 
     // ---- Geysers ----
 

@@ -737,87 +737,31 @@ biome("geothermal_basin", id=93, base="taiga", temp=0.3, downfall=0.6,
                (None, "minecraft:white_terracotta")),
       under=rule((noise("surface", 0.0), "minecraft:calcite"), (None, "minecraft:white_terracotta")), top_wet=True,
       no_tags=["has_structure/village_taiga", "has_structure/pillager_outpost"])
-# ---- Terralith's Yosemite and Yellowstone (Oct 27: "exactly like the Terralith biome"), rebuilt from Terralith's own
-# data with vanilla features. Placed only where the terrain already suits them (pipeline/AridLandforms
-# yosemiteBiomes, yellowstoneBiomes): no valley is cut and no basin dug. ----
-TERRALITH_SPAWNS = {
-    "creature": [{"type": "minecraft:sheep", "count": 4, "weight": 12}, {"type": "minecraft:pig", "count": 4, "weight": 10},
-                 {"type": "minecraft:chicken", "count": 4, "weight": 10}, {"type": "minecraft:cow", "count": 4, "weight": 8},
-                 {"type": "minecraft:wolf", "count": 2, "weight": 8}, {"type": "minecraft:rabbit", "count": uniform(2, 3), "weight": 4},
-                 {"type": "minecraft:fox", "count": uniform(1, 2), "weight": 8}],
-    "ambient": [{"type": "minecraft:bat", "count": 8, "weight": 10}],
-    "underground_water_creature": [{"type": "minecraft:glow_squid", "count": uniform(4, 6), "weight": 10}]}
+# ---- Yosemite and Yellowstone (Nov 2, Orogeny's own designs after the real places; they replaced the Oct 27 versions
+# that reused Terralith's data). Placed only where the terrain already suits them (pipeline/AridLandforms
+# yosemiteBiomes, yellowstoneBiomes): no valley is cut and no basin dug. Mob spawns are their vanilla base biome's. ----
 TAIGA_GROUND = ["minecraft:patch_large_fern", "minecraft:patch_grass_taiga_2", "minecraft:brown_mushroom_taiga",
                 "minecraft:red_mushroom_taiga", "minecraft:brown_mushroom_normal", "minecraft:red_mushroom_normal",
                 "minecraft:patch_sugar_cane", "minecraft:patch_pumpkin", "minecraft:patch_berry_common"]
 
 
-def noise_count(factor, offset, ratio):
-    return {"type": "minecraft:noise_based_count", "noise_factor": factor, "noise_offset": offset,
-            "noise_to_count_ratio": ratio}
-
-
-def tl_tree(trunk, leaves_id, base, a, b, foliage, soil="minecraft:coarse_dirt", size=None):
+def conifer(trunk, leaves_id, base, a, b, foliage, soil="minecraft:dirt", two_layers=(1, 0, 1)):
+    limit, lower, upper = two_layers
     return {"type": "minecraft:tree", "below_trunk_provider": {"id": soil}, "decorators": [],
             "foliage_placer": foliage, "foliage_provider": leaves(leaves_id), "ignore_vines": True,
-            "minimum_size": size or {"type": "minecraft:two_layers_feature_size", "limit": 1, "lower_size": 0, "upper_size": 0},
+            "minimum_size": {"type": "minecraft:two_layers_feature_size", "limit": limit, "lower_size": lower, "upper_size": upper},
             "trunk_placer": {"type": "minecraft:straight_trunk_placer", "base_height": base, "height_rand_a": a, "height_rand_b": b},
             "trunk_provider": log(trunk)}
 
 
-FEATURES.update({
-    # Yellowstone's trees: tall spruces with a narrow mega pine crown or a spruce crown, and birches shaped like
-    # spruces and pines, all on coarse dirt.
-    "tl_spruce_big": tl_tree("minecraft:spruce_log", "minecraft:spruce_leaves", 8, 2, 9,
-                             {"type": "minecraft:mega_pine_foliage_placer", "crown_height": uniform(12, 17), "offset": uniform(1, 3), "radius": uniform(0, 1)}),
-    "tl_spruce_big_alt": tl_tree("minecraft:spruce_log", "minecraft:spruce_leaves", 6, 2, 7,
-                                 {"type": "minecraft:spruce_foliage_placer", "offset": uniform(0, 2), "radius": uniform(2, 3), "trunk_height": uniform(1, 3)}),
-    "tl_birch": tl_tree("minecraft:birch_log", "minecraft:birch_leaves", 5, 2, 3,
-                        {"type": "minecraft:spruce_foliage_placer", "offset": uniform(0, 2), "radius": 2, "trunk_height": uniform(1, 2)}),
-    "tl_birch_alt": tl_tree("minecraft:birch_log", "minecraft:birch_leaves", 5, 2, 2,
-                            {"type": "minecraft:pine_foliage_placer", "offset": uniform(0, 1), "radius": uniform(1, 2), "height": uniform(1, 3)}),
-    # Yosemite's oaks: tall straight oaks with a spruce-shaped crown, and giant ones with a mega pine crown.
-    "tl_yosemite_oak": tl_tree("minecraft:oak_log", "minecraft:oak_leaves", 6, 5, 8,
-                               {"type": "minecraft:spruce_foliage_placer", "offset": uniform(0, 2), "radius": uniform(2, 3), "trunk_height": uniform(3, 4)},
-                               soil="minecraft:dirt", size={"type": "minecraft:two_layers_feature_size", "limit": 2, "lower_size": 1, "upper_size": 2}),
-    "tl_yosemite_oak_mega": tl_tree("minecraft:oak_log", "minecraft:oak_leaves", 6, 5, 8,
-                                    {"type": "minecraft:mega_pine_foliage_placer", "crown_height": uniform(10, 13), "offset": uniform(1, 3), "radius": uniform(1, 2)},
-                                    soil="minecraft:dirt", size={"type": "minecraft:two_layers_feature_size", "limit": 2, "lower_size": 1, "upper_size": 2}),
-    # Yosemite cliffs: grassy ledges on the bare stone, light diorite and calcite streaks in the walls.
-    "tl_cliff_plants": {"type": "minecraft:simple_block", "to_place": {"type": "minecraft:weighted", "entries": [
-        {"data": "minecraft:short_grass", "weight": 50},
-        {"data": {"id": "minecraft:tall_grass", "properties": {"half": "lower"}}, "weight": 10}]}},
-    "tl_cliff_grass": {"type": "minecraft:vegetation_patch", "depth": 1, "extra_bottom_block_chance": 0.0,
-                       "extra_edge_column_chance": 0.4, "ground_state": {"id": "minecraft:grass_block", "properties": {"snowy": "false"}},
-                       "replaceable": "#minecraft:base_stone_overworld", "surface": "floor", "vegetation_chance": 0.3,
-                       "vegetation_feature": {"feature": "orogeny:tl_cliff_plants", "placement": []}, "vertical_range": 8, "xz_radius": uniform(1, 5)},
-    "tl_diorite": {"type": "minecraft:ore", "discard_chance_on_air_exposure": 0.0, "size": 45,
-                   "targets": [{"state": {"id": "minecraft:diorite"}, "target": {"predicate_type": "minecraft:block_match", "block": "minecraft:stone"}}]},
-    "tl_calcite": {"type": "minecraft:ore", "discard_chance_on_air_exposure": 0.0, "size": 45,
-                   "targets": [{"state": {"id": "minecraft:calcite"}, "target": {"predicate_type": "minecraft:block_match", "block": "minecraft:diorite"}}]},
-    # Waterfalls: a water source on the lip of a ledge pours over the cliff (Terralith set its sources into calcite
-    # ledges; here a source goes wherever a ledge drops away, with a tick so it flows at once).
-    "tl_waterfall": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:water", "properties": {"level": "0"}},
-                     "schedule_tick": True},
-    "tl_andesite_disk": {"type": "minecraft:disk", "half_height": 2, "radius": uniform(3, 5), "state_provider": {"id": "minecraft:andesite"},
-                         "target": {"type": "minecraft:matching_blocks", "blocks": ["minecraft:gravel", "minecraft:sand", "minecraft:dirt",
-                                    "minecraft:grass_block", "minecraft:calcite", "minecraft:basalt"]}},
-    "tl_dandelion": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:dandelion"}},
-})
-SELECTORS["tl_yosemite_oaks"] = ("orogeny:tl_yosemite_oak_checked", [
-    ("orogeny:tl_yosemite_oak_mega_checked", 0.3), ("orogeny:tl_spruce_big_alt_checked", 0.075),
-    ("orogeny:tl_spruce_big_checked", 0.075), ("orogeny:tl_birch_alt_checked", 0.075), ("orogeny:tl_birch_checked", 0.075)])
-ON_CLIFF_EDGE = {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": [
-    {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air"]},
-    {"type": "minecraft:solid", "offset": [0, -1, 0]},
-    {"type": "minecraft:any_of", "predicates": [
-        {"type": "minecraft:all_of", "predicates": [{"type": "minecraft:matching_blocks", "offset": [dx, -1, dz], "blocks": ["minecraft:air"]},
-                                                    {"type": "minecraft:matching_blocks", "offset": [dx, -2, dz], "blocks": ["minecraft:air"]}]}
-        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))]}]}}
-
-
 def tree_checked(f, sapling):
     return {"feature": f, "placement": [survive(sapling)]}
+
+
+def wall_body(state, size):
+    """A body of another rock in stone (the walls of Yosemite)."""
+    return {"type": "minecraft:ore", "discard_chance_on_air_exposure": 0.0, "size": size,
+            "targets": [{"state": {"id": state}, "target": {"predicate_type": "minecraft:block_match", "block": "minecraft:stone"}}]}
 
 
 def heightmap_count(feature, count, *mods, heightmap="WORLD_SURFACE_WG", post=()):
@@ -826,81 +770,107 @@ def heightmap_count(feature, count, *mods, heightmap="WORLD_SURFACE_WG", post=()
                                               *post, {"type": "minecraft:biome"}]}
 
 
-PLACED.update({
-    "tl_spruce_big_checked": tree_checked("orogeny:tl_spruce_big", "minecraft:spruce_sapling"),
-    "tl_spruce_big_alt_checked": tree_checked("orogeny:tl_spruce_big_alt", "minecraft:spruce_sapling"),
-    "tl_birch_checked": tree_checked("orogeny:tl_birch", "minecraft:birch_sapling"),
-    "tl_birch_alt_checked": tree_checked("orogeny:tl_birch_alt", "minecraft:birch_sapling"),
-    "tl_yosemite_oak_checked": tree_checked("orogeny:tl_yosemite_oak", "minecraft:oak_sapling"),
-    "tl_yosemite_oak_mega_checked": tree_checked("orogeny:tl_yosemite_oak_mega", "minecraft:oak_sapling"),
-    # Terralith's Yellowstone trees came in height bands (spruces low, birches high); Terra's terrain has no fixed
-    # heights, so all four grow everywhere at about the density each had in its band.
-    "tl_yellowstone_spruces": heightmap_count("orogeny:tl_spruce_big", 2, post=[survive("minecraft:spruce_sapling")]),
-    "tl_yellowstone_spruces_alt": heightmap_count("orogeny:tl_spruce_big_alt", 2, post=[survive("minecraft:spruce_sapling")]),
-    "tl_yellowstone_birches": heightmap_count("orogeny:tl_birch", 2, post=[survive("minecraft:birch_sapling")]),
-    "tl_yellowstone_birches_alt": heightmap_count("orogeny:tl_birch_alt", 1, post=[survive("minecraft:birch_sapling")]),
-    "tl_yosemite_oaks": {"feature": "orogeny:tl_yosemite_oaks", "placement": [
-        {"type": "minecraft:count", "count": {"type": "minecraft:weighted_list", "distribution": [{"data": 7, "weight": 50}, {"data": 8, "weight": 50}]}},
-        {"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}]},
-    "tl_cliff_grass": heightmap_count("orogeny:tl_cliff_grass", 15, noise_count(75, -0.2, 1), noise_count(75, -1, -1)),
-    "tl_calcite": heightmap_count("orogeny:tl_calcite", 150, noise_count(75, 1, 1), noise_count(75, 0.5, -1)),
-    "tl_diorite": heightmap_count("orogeny:tl_diorite", 150, noise_count(75, 0.6, 1), noise_count(75, 0.2, -1)),
-    "tl_waterfalls": heightmap_count("orogeny:tl_waterfall", 6, ON_CLIFF_EDGE),
-    "tl_andesite_disks": {"feature": "orogeny:tl_andesite_disk", "placement": [
-        {"type": "minecraft:count", "count": 228}, {"type": "minecraft:in_square"}, noise_count(175, 1, 1),
-        {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR_WG"},
-        {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:matching_fluids", "fluids": "minecraft:water"}},
-        {"type": "minecraft:biome"}]},
-    "tl_dandelions": patch("orogeny:tl_dandelion", 64, spread=7, chance=20),
+ON_CLIFF_EDGE = {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": [
+    {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air"]},
+    {"type": "minecraft:solid", "offset": [0, -1, 0]},
+    {"type": "minecraft:any_of", "predicates": [
+        {"type": "minecraft:all_of", "predicates": [{"type": "minecraft:matching_blocks", "offset": [dx, -1, dz], "blocks": ["minecraft:air"]},
+                                                    {"type": "minecraft:matching_blocks", "offset": [dx, -2, dz], "blocks": ["minecraft:air"]}]}
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))]}]}}
+ON_SOLID = {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": [
+    {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air"]},
+    {"type": "minecraft:matching_blocks", "offset": [0, -1, 0], "blocks": ["minecraft:grass_block", "minecraft:coarse_dirt",
+                                                                          "minecraft:dirt", "minecraft:podzol"]}]}}
+
+FEATURES.update({
+    # Yellowstone's lodgepole pines: a tall, straight, bare trunk under a short, narrow crown (the real tree's look).
+    "lodgepole_pine": conifer("minecraft:spruce_log", "minecraft:spruce_leaves", 14, 4, 2,
+                              {"type": "minecraft:spruce_foliage_placer", "offset": uniform(0, 1), "radius": uniform(1, 2),
+                               "trunk_height": uniform(8, 11)}, two_layers=(2, 0, 1)),
+    # Standing dead trunks left by fires, weathered silver-grey (stripped spruce).
+    "burned_snag": {"type": "minecraft:block_column", "allowed_placement": {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air"]},
+                    "direction": "up", "prioritize_tip": False,
+                    "layers": [{"height": uniform(4, 11), "provider": log("minecraft:stripped_spruce_log")}]},
+    # Yosemite's valley trees: ponderosa pines (tall, orange-tan plated bark, an open crown high up), incense cedars
+    # (narrow and pointed), California black oaks (short, broad and round).
+    "ponderosa_pine": conifer("minecraft:jungle_log", "minecraft:spruce_leaves", 12, 4, 3,
+                              {"type": "minecraft:pine_foliage_placer", "height": uniform(3, 4), "offset": 1, "radius": uniform(2, 3)},
+                              two_layers=(2, 0, 2)),
+    "incense_cedar": conifer("minecraft:spruce_log", "minecraft:spruce_leaves", 9, 3, 1,
+                             {"type": "minecraft:spruce_foliage_placer", "offset": 0, "radius": uniform(1, 2), "trunk_height": uniform(2, 4)},
+                             two_layers=(1, 0, 1)),
+    "black_oak": conifer("minecraft:dark_oak_log", "minecraft:oak_leaves", 5, 2, 1,
+                         {"type": "minecraft:blob_foliage_placer", "height": 3, "offset": 0, "radius": 3}, two_layers=(1, 0, 1)),
+    # Yosemite's walls: pale granite with large speckled diorite bodies, white sheets and darker grey patches.
+    "granite_wall_diorite": wall_body("minecraft:diorite", 60),
+    "granite_wall_calcite": wall_body("minecraft:calcite", 34),
+    "granite_wall_andesite": wall_body("minecraft:andesite", 26),
+    # Grass, ferns and flowers on the ledges of the bare walls.
+    "ledge_plants": {"type": "minecraft:simple_block", "to_place": {"type": "minecraft:weighted", "entries": [
+        {"data": "minecraft:short_grass", "weight": 40}, {"data": "minecraft:fern", "weight": 12},
+        {"data": {"id": "minecraft:tall_grass", "properties": {"half": "lower"}}, "weight": 6},
+        {"data": "minecraft:cornflower", "weight": 2}]}},
+    "ledge_grass": {"type": "minecraft:vegetation_patch", "depth": 1, "extra_bottom_block_chance": 0.0,
+                    "extra_edge_column_chance": 0.25, "ground_state": {"id": "minecraft:grass_block", "properties": {"snowy": "false"}},
+                    "replaceable": "#minecraft:base_stone_overworld", "surface": "floor", "vegetation_chance": 0.35,
+                    "vegetation_feature": {"feature": "orogeny:ledge_plants", "placement": []}, "vertical_range": 6, "xz_radius": uniform(1, 4)},
+    # Waterfalls: a water source where a ledge drops away pours over the cliff (ticked so it flows at once).
+    "cliff_waterfall": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:water", "properties": {"level": "0"}},
+                        "schedule_tick": True},
 })
-# Yosemite cliffs: bare stone walls (diorite and calcite streaks from the features), grassy ledges, waterfalls.
-biome("yosemite_cliffs", id=94, base="old_growth_pine_taiga", temp=0.375, downfall=0.8,
-      colors={"water_color": "#3f76e4"},
+SELECTORS["trees_yosemite"] = ("orogeny:ponderosa_pine_checked", [
+    ("orogeny:incense_cedar_checked", 0.25), ("orogeny:black_oak_checked", 0.3), ("orogeny:redwood_checked", 0.025)])
+def grove_trees_checked(feature, sapling, above, below=0):
+    """grove_trees for a single configured tree, with the sapling survival test."""
+    p = grove_trees(feature, above, below)
+    p["placement"].append(survive(sapling))
+    return p
+
+
+WALL_SPREAD = [{"type": "minecraft:offset", "x": 0, "y": {"type": "minecraft:uniform", "min_inclusive": -32, "max_inclusive": 0}, "z": 0}]
+PLACED.update({
+    "lodgepole_pine_checked": tree_checked("orogeny:lodgepole_pine", "minecraft:spruce_sapling"),
+    "ponderosa_pine_checked": tree_checked("orogeny:ponderosa_pine", "minecraft:spruce_sapling"),
+    "incense_cedar_checked": tree_checked("orogeny:incense_cedar", "minecraft:spruce_sapling"),
+    "black_oak_checked": tree_checked("orogeny:black_oak", "minecraft:oak_sapling"),
+    # Lodgepole stands with open meadow between them (vanilla's biome-info noise picks the stands), standing dead
+    # trunks and young spruces in the openings.
+    "trees_yellowstone": grove_trees_checked("orogeny:lodgepole_pine", "minecraft:spruce_sapling", above=9, below=1),
+    "burned_snags": {"feature": "orogeny:burned_snag", "placement": [
+        {"type": "minecraft:noise_threshold_count", "above_noise": 0, "below_noise": 2, "noise_level": 0.0},
+        {"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, ON_SOLID,
+        {"type": "minecraft:biome"}]},
+    "yellowstone_regrowth": grove_trees_checked("minecraft:spruce", "minecraft:spruce_sapling", above=0, below=2),
+    "trees_yosemite": trees("orogeny:trees_yosemite", [(4, 2), (5, 2), (6, 1)]),
+    "ledge_grass": heightmap_count("orogeny:ledge_grass", 12),
+    "granite_wall_diorite": heightmap_count("orogeny:granite_wall_diorite", 40, post=WALL_SPREAD),
+    "granite_wall_calcite": heightmap_count("orogeny:granite_wall_calcite", 24, post=WALL_SPREAD),
+    "granite_wall_andesite": heightmap_count("orogeny:granite_wall_andesite", 10, post=WALL_SPREAD),
+    "cliff_waterfalls": heightmap_count("orogeny:cliff_waterfall", 4, ON_CLIFF_EDGE),
+})
+# Yosemite cliffs: bare granite walls (pale stone with diorite, calcite and andesite bodies), grassy ledges, waterfalls.
+biome("yosemite_cliffs", id=94, base="old_growth_pine_taiga", temp=0.4, downfall=0.6,
+      colors={"water_color": "#3a6fd6"},
       veg=TAIGA_GROUND, top=rule((None, "minecraft:stone")), under=rule((None, "minecraft:stone")),
-      steps={5: ["orogeny:tl_cliff_grass", "orogeny:tl_calcite", "orogeny:tl_diorite", "orogeny:tl_waterfalls"]},
-      spawns=TERRALITH_SPAWNS, attrs={"minecraft:visual/fog_color": "#c0d8ff", "minecraft:visual/sky_color": "#7da3ff"},
+      steps={5: ["orogeny:ledge_grass", "orogeny:granite_wall_diorite", "orogeny:granite_wall_calcite",
+                 "orogeny:granite_wall_andesite", "orogeny:cliff_waterfalls"]},
       no_tags=["has_structure/village_taiga", "has_structure/pillager_outpost"])
-# Yosemite lowlands: the meadow valley floor: tall oaks (some giant), a few spruces and birches, dandelions, andesite
-# in the river beds, waterfalls where it meets the walls.
-biome("yosemite_lowlands", id=96, base="taiga", temp=0.25, downfall=0.8,
-      colors={"grass_color": "#598347", "foliage_color": "#508231", "water_color": "#3647aa"},
-      veg=["orogeny:tl_waterfalls", "orogeny:tl_yosemite_oaks", "orogeny:tl_dandelions"] + TAIGA_GROUND, top=None,
-      add_steps={6: ["orogeny:tl_andesite_disks"]},
-      spawns=TERRALITH_SPAWNS, attrs={"minecraft:visual/fog_color": "#c0d8ff", "minecraft:visual/sky_color": "#7da3ff"},
+# Yosemite lowlands: the valley floor, open woodland of ponderosa pine, incense cedar and black oak (a rare giant
+# sequoia), meadow flowers, waterfalls where it meets the walls.
+biome("yosemite_lowlands", id=96, base="taiga", temp=0.5, downfall=0.6,
+      colors={"grass_color": "#79a35a", "foliage_color": "#5c8f3e", "water_color": "#3a6fd6"},
+      veg=["orogeny:cliff_waterfalls", "orogeny:trees_yosemite", "minecraft:wildflowers_meadow",
+           "minecraft:patch_grass_meadow", "minecraft:fallen_oak_tree"] + TAIGA_GROUND[2:], top=None,
       no_tags=["has_structure/village_taiga", "has_structure/pillager_outpost"])
-# Yellowstone: calcite ground with coarse dirt and grass, patches of yellow terracotta, red sand, blackstone, smooth
-# basalt and gravel, thin veins of gravel and calcite, calcite on steep faces (Terralith's surface rule; its height
-# bands, made for fixed heights, are a noise mix here). world/Yellowstone lays the pools, stained rims and steam vents.
-YS_PATCH = "orogeny:yellowstone/calcite_patch"
-YS_VEIN = "orogeny:yellowstone/gravel"
-YS_DIRT = "orogeny:yellowstone/dirt"
-YS_CLIFF = "orogeny:yellowstone/calcite_cliff"
-def parity_noise(first_octave, amplitudes):
-    """An old-format noise (firstOctave, amplitudes) in 26.3's format, as NormalNoise.createParity converts it."""
-    n = len(amplitudes)
-    amp = 2.0 ** (n - 1) / (2.0 ** n - 1.0)
-    octs = []
-    for a in amplitudes:
-        if a != 0.0:
-            octs.append(abs(amp * a))
-        amp *= 0.5
-    target = sum(octs)
-    dev = math.sqrt(sum((0.2702247831245211 * o) ** 2 for o in octs)) * math.sqrt(2.0)
-    new_norm = (target / 3.0) / dev
-    nz = [i for i, a in enumerate(amplitudes) if a != 0.0]
-    old_norm = 0.5 / 3.0 / (0.1 * (1.0 + 1.0 / (nz[-1] - nz[0] + 1)))
-    out = {"base_amplitude": old_norm / new_norm, "base_octave": first_octave, "octave_count": n}
-    if any(a != 1.0 for a in amplitudes):
-        out["amplitude_modifiers"] = list(amplitudes)
-    return out
-
-
-assert abs(parity_noise(-6, [1.0, 1.0, 1.0])["base_amplitude"] - 0.9381732587751008) < 1e-9   # vanilla's surface noise
-# Terralith's own noises (old format), converted.
-NOISES = {"yellowstone/calcite_patch": parity_noise(-6, [1.6, 0.9, 1.0, 2.5, 0.0, 1.25, 4.3]),
-          "yellowstone/gravel": parity_noise(-5, [1.0, 0.25]),
-          "yellowstone/dirt": parity_noise(-2, [1.0, 0.75, 1.5]),
-          "yellowstone/calcite_cliff": parity_noise(-7, [1.0, 1.0, 0.5, 1.25])}
+# Yellowstone: a high plateau of lodgepole forest and grassy meadow; pale sinter flats (calcite, grey diorite at their
+# edges, sulfur specks) where the ground is hot; yellow, orange and white rock on steep faces (the rhyolite of its
+# Grand Canyon). world/Yellowstone lays the hot springs, mud pots and geysers.
+YS_SINTER = "orogeny:yellowstone/sinter"
+YS_MEADOW = "orogeny:yellowstone/meadow"
+YS_RHYOLITE = "orogeny:yellowstone/rhyolite"
+NOISES = {"yellowstone/sinter": {"base_amplitude": 1.0, "base_octave": -7, "octave_count": 3, "amplitude_modifiers": [1.0, 0.6, 0.35]},
+          "yellowstone/meadow": {"base_amplitude": 1.0, "base_octave": -5, "octave_count": 2, "amplitude_modifiers": [1.0, 0.5]},
+          "yellowstone/rhyolite": {"base_amplitude": 1.0, "base_octave": -4, "octave_count": 2, "amplitude_modifiers": [1.0, 0.4]}}
 
 
 def tnoise(n, lo, hi=None):
@@ -917,45 +887,26 @@ def cond(c, then):
     return {"type": "minecraft:condition", "if_true": c, "then_run": then}
 
 
-def vein(lo, hi, width, b):
-    return cond(tnoise(YS_PATCH, lo, hi), cond(tnoise(YS_VEIN, -width, width), cond(FLOOR0, block(b))))
-
-
-# Oct 27 (Calvin: "more dirt and grass and less geothermal pools, the Terralith version did not look like that"): every
-# stain threshold raised by YS_SHIFT so the stained patches are rarer and smaller, the veins around them thinner, and the
-# ground between them grass and coarse dirt rather than calcite. Sulfur crusts in the yellow patches, specks of
-# cinnabar in the red ones (26.3's blocks).
-YS_SHIFT = 0.2
-def ys(t):
-    return t + YS_SHIFT
-
-
 YELLOWSTONE_TOP = {"type": "minecraft:sequence", "sequence": [
-    cond(tnoise(YS_PATCH, ys(0.725)), cond(NOT_STEEP, cond(tnoise(YS_VEIN, 0.25), block("minecraft:sulfur")))),
-    cond(tnoise(YS_PATCH, ys(0.725)), cond(NOT_STEEP, block("minecraft:yellow_terracotta"))),
-    cond(tnoise(YS_PATCH, ys(0.675)), cond(NOT_STEEP, cond(tnoise(YS_VEIN, -1e9, -0.45), block("minecraft:cinnabar")))),
-    cond(tnoise(YS_PATCH, ys(0.675)), cond(NOT_STEEP, block("minecraft:red_sand"))),
-    cond(tnoise(YS_PATCH, ys(0.615)), block("minecraft:blackstone")),
-    cond(tnoise(YS_PATCH, ys(0.525)), block("minecraft:smooth_basalt")),
-    cond(tnoise(YS_PATCH, ys(0.4)), block("minecraft:gravel")),
-    vein(ys(0.3), ys(0.4), 0.05, "minecraft:gravel"), vein(ys(0.2), ys(0.3), 0.03, "minecraft:gravel"),
-    vein(ys(0.1), ys(0.2), 0.015, "minecraft:gravel"),
-    vein(ys(0.28), ys(0.4), 0.08, "minecraft:calcite"), vein(ys(0.16), ys(0.28), 0.055, "minecraft:calcite"),
-    vein(ys(0.04), ys(0.16), 0.025, "minecraft:calcite"),
-    cond(tnoise(YS_PATCH, ys(0.225)), block("minecraft:calcite")),
-    cond(STEEP, cond(tnoise(YS_CLIFF, -0.4), block("minecraft:calcite"))),
-    # Mostly grass, with coarse dirt in patches (Terralith's height bands, grass low and coarse dirt higher, as a mix
-    # by its dirt noise), dirt under them.
-    cond(FLOOR0, cond(tnoise(YS_DIRT, -0.45), block("minecraft:grass_block"))),
-    cond(tnoise(YS_DIRT, -0.8), block("minecraft:coarse_dirt")),
+    # Steep faces: banded rhyolite, yellow with orange and white.
+    cond(STEEP, cond(tnoise(YS_RHYOLITE, 0.35), block("minecraft:orange_terracotta"))),
+    cond(STEEP, cond(tnoise(YS_RHYOLITE, -0.3), block("minecraft:yellow_terracotta"))),
+    cond(STEEP, block("minecraft:white_terracotta")),
+    # Sinter flats: calcite with specks of sulfur in their middle, grey diorite round their edge.
+    cond(tnoise(YS_SINTER, 0.62), cond(FLOOR0, cond(tnoise(YS_MEADOW, 0.55), block("minecraft:sulfur")))),
+    cond(tnoise(YS_SINTER, 0.6), block("minecraft:calcite")),
+    cond(tnoise(YS_SINTER, 0.53), block("minecraft:diorite")),
+    # Meadow and forest floor: grass, with patches of coarse dirt and podzol.
+    cond(FLOOR0, cond(tnoise(YS_MEADOW, 0.6), block("minecraft:podzol"))),
+    cond(FLOOR0, cond(tnoise(YS_MEADOW, -0.55), block("minecraft:grass_block"))),
+    cond(FLOOR0, block("minecraft:coarse_dirt")),
     block("minecraft:dirt")]}
-biome("yellowstone", id=97, base="taiga", temp=0.25, downfall=0.8,
-      colors={"grass_color": "#c6d097", "water_color": "#77e0f7"},
-      veg=["orogeny:tl_yellowstone_spruces", "orogeny:tl_yellowstone_spruces_alt", "orogeny:tl_yellowstone_birches",
-           "orogeny:tl_yellowstone_birches_alt", "minecraft:patch_large_fern", "minecraft:flower_default"] + TAIGA_GROUND[1:],
+biome("yellowstone", id=97, base="taiga", temp=0.3, downfall=0.6,
+      colors={"grass_color": "#9fb06a", "foliage_color": "#5b7f45", "water_color": "#4fb7d9"},
+      veg=["orogeny:trees_yellowstone", "orogeny:burned_snags", "orogeny:yellowstone_regrowth",
+           "minecraft:fallen_spruce_tree", "minecraft:patch_grass_meadow", "minecraft:wildflowers_meadow"]
+          + TAIGA_GROUND[2:4],
       top=YELLOWSTONE_TOP, under=rule((None, "minecraft:dirt")),
-      add_steps={8: ["minecraft:spring_lava"]},
-      spawns=TERRALITH_SPAWNS, attrs={"minecraft:visual/fog_color": "#e0e9ff", "minecraft:visual/sky_color": "#77a8ff"},
       no_tags=["has_structure/village_taiga", "has_structure/pillager_outpost"])
 # Mirage isles: sheer pale cliffs in bands (calcite, white and pink terracotta), teal jungle and giant mushrooms on top.
 # Like mushroom fields: no monsters, mooshrooms (red and brown, see MirageMooshroomMixin; grass counts for them).
@@ -1074,7 +1025,7 @@ CAVE_FEATURES = {
     "cave_jungle_plants": {"type": "minecraft:simple_block", "to_place": weighted(
         ("minecraft:short_grass", 6), ("minecraft:fern", 5), ("minecraft:large_fern", 2), ("minecraft:bush", 3),
         ("minecraft:tall_grass", 1))},
-    # Icy caves: ice in the walls, snow and ice floors, icicles and ice spikes. Frostfire adds magma.
+    # Icy caves: ice in the walls, snow and ice floors, icicles and ice spikes. Fumarole caves add magma.
     "cave_snow_layer": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:snow"}},
     "cave_icicle": column("down", ("minecraft:packed_ice", (0, 1)), ("minecraft:ice", (1, 3))),
     "cave_ice_spike": column("up", ("minecraft:packed_ice", (1, 2)), ("minecraft:ice", (0, 2))),
@@ -1118,8 +1069,6 @@ CAVE_FEATURES.update({
                                 "floor", "orogeny:cave_snow_layer", 0.5, depth=(1, 2), replaceable="#minecraft:base_stone_overworld"),
     "cave_icy_ceiling": patch_cfg(weighted(("minecraft:packed_ice", 3), ("minecraft:ice", 2), ("minecraft:blue_ice", 1)),
                                   "ceiling", "orogeny:cave_icicle", 0.25, replaceable="#minecraft:base_stone_overworld"),
-    "cave_frostfire_floor": patch_cfg(weighted(("minecraft:packed_ice", 3), ("minecraft:blue_ice", 2), ("minecraft:magma_block", 1)),
-                                      "floor", "orogeny:cave_snow_layer", 0.0, depth=(1, 2), replaceable="#minecraft:base_stone_overworld"),
     "cave_rubble_floor": patch_cfg(weighted(("minecraft:gravel", 3), ("minecraft:cobblestone", 2), ("minecraft:mossy_cobblestone", 1)),
                                    "floor", "orogeny:cave_rubble", 0.15, depth=(1, 2), replaceable="#minecraft:base_stone_overworld"),
     "cave_broken_ceiling": patch_cfg(weighted(("minecraft:cobblestone", 2), ("minecraft:stone", 2), ("minecraft:andesite", 1)),
@@ -1159,7 +1108,6 @@ CAVE_PLACED = {
     "cave_ore_blue_ice": cave_placed("orogeny:cave_ore_blue_ice", 5),
     "cave_ore_snow": cave_placed("orogeny:cave_ore_snow", 4),
     "cave_ore_magma": cave_placed("orogeny:cave_ore_magma", 9),
-    "cave_frostfire_floor": cave_placed("orogeny:cave_frostfire_floor", 50, SCAN_FLOOR),
     "cave_ore_infested": cave_placed("orogeny:cave_ore_infested", 16),
     "cave_ore_infested_cobble": cave_placed("orogeny:cave_ore_infested_cobble", 6),
     "cave_rubble_floor": cave_placed("orogeny:cave_rubble_floor", 45, SCAN_FLOOR),
@@ -1206,85 +1154,37 @@ cave_biome("icy_caves", 148, -0.5, downfall=0.4,
            under=["orogeny:cave_icy_floor", "orogeny:cave_icy_ceiling", "orogeny:cave_icicles", "orogeny:cave_ice_spikes"],
            ores=["orogeny:cave_ore_packed_ice", "orogeny:cave_ore_ice", "orogeny:cave_ore_blue_ice", "orogeny:cave_ore_snow"],
            spawns_from="snowy_plains")
-# Frostfire caves (Oct 27: "exactly like the Terralith version"): Terralith's design rebuilt from vanilla features.
-# Deepslate and blue ice patches on floors and ceilings, soul fire on the floor patches (on soul soil, the only ground
-# soul fire stays lit on), blue ice icicles and the odd chain hanging a soul lantern from the ceiling, huge blue ice
-# pillars (vanilla large dripstone, turned to blue ice by world/FrostfireCaves after features), heavy sculk with its
-# sensors, no lava (also world/FrostfireCaves), skeletons and strays, black fog and cyan-to-blue motes. Soul fire and
-# soul lanterns are the one exception to "cave light only from glow lichen, shroomlight and froglights".
-SCAN_FLOOR_32 = [{"type": "minecraft:environment_scan", "allowed_search_condition": AIR, "direction_of_search": "down",
-                  "max_steps": 32, "target_condition": {"type": "minecraft:solid"}}]
-SCAN_CEILING_30 = [{"type": "minecraft:environment_scan", "allowed_search_condition": AIR, "direction_of_search": "up",
-                    "max_steps": 30, "target_condition": {"type": "minecraft:solid"}}]
+# Fumarole caves (Nov 2): caves melted into ice by volcanic heat under cold ground, as at Kverkfjöll in Iceland or
+# under Mount Erebus. Walls and ceilings of packed and blue ice with icicles, snow and ice floors, magma seams in the
+# rock, warm sulfur pools (vanilla's sulfur pool: potent sulfur under water, which steams and erupts) and sulfur crusts
+# with spikes round them, a pale blue-grey haze and drifting ash. world/FumaroleCaves turns the lava of these caves
+# into magma (heat without flowing lava melting the ice).
 FEATURES.update({
-    # Soul fire on a soul soil block set into the floor.
-    "cave_frostfire_flame": {"type": "minecraft:sequence", "features": [
-        {"feature": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:soul_soil"}},
-         "placement": [{"type": "minecraft:offset", "x": 0, "y": -1, "z": 0}]},
-        {"feature": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:soul_fire"}}, "placement": []}]},
-    "cave_frostfire_floor": patch_cfg(weighted(("minecraft:deepslate", 2), ("minecraft:blue_ice", 2)), "floor",
-                                      "orogeny:cave_frostfire_flame", 0.05, depth=(1, 2), radius=(2, 5), edge=0.5,
-                                      bottom=0.5, replaceable="#minecraft:base_stone_overworld"),
-    "cave_frostfire_icicle": {"type": "minecraft:block_column", "allowed_placement": {"type": "minecraft:true"},
-        "direction": "down", "prioritize_tip": False,
-        "layers": [{"height": {"type": "minecraft:biased_to_bottom", "min_inclusive": 1, "max_inclusive": 5},
-                    "provider": {"id": "minecraft:blue_ice"}}]},
-    "cave_frostfire_lantern": {"type": "minecraft:block_column", "allowed_placement": AIR, "direction": "down",
-        "prioritize_tip": True,
-        "layers": [{"height": {"type": "minecraft:clamped_normal", "mean": 4.0, "deviation": 12.0, "min_inclusive": 4,
-                               "max_inclusive": 50},
-                    "provider": {"id": "minecraft:iron_chain", "properties": {"axis": "y", "waterlogged": "false"}}},
-                   {"height": 1, "provider": {"id": "minecraft:soul_lantern",
-                                              "properties": {"hanging": "true", "waterlogged": "false"}}}]},
-    "cave_frostfire_hang": {"type": "minecraft:random_selector", "default": inline("orogeny:cave_frostfire_icicle"),
-                            "features": [{"chance": 0.07, "feature": inline("orogeny:cave_frostfire_lantern")}]},
-    "cave_frostfire_ceiling": patch_cfg(weighted(("minecraft:deepslate", 4), ("minecraft:blue_ice", 2)), "ceiling",
-                                        "orogeny:cave_frostfire_hang", 0.4, depth=(1, 2), radius=(2, 5), edge=0.5,
-                                        bottom=0.5, replaceable="#minecraft:base_stone_overworld"),
-    "cave_frostfire_pillar": {"type": "minecraft:large_dripstone", "replaceable_blocks": "#minecraft:dripstone_replaceable_blocks",
-        "floor_to_ceiling_search_range": 60, "column_radius": uniform(1, 2),
-        "height_scale": {"type": "minecraft:uniform", "min_inclusive": 5.0, "max_exclusive": 13.0},
-        "max_column_radius_to_cave_height_ratio": 1.0, "min_bluntness_for_wind": 0.0, "min_radius_for_wind": 0,
-        "stalactite_bluntness": {"type": "minecraft:uniform", "min_inclusive": 0.9, "max_exclusive": 1.5},
-        "stalagmite_bluntness": {"type": "minecraft:uniform", "min_inclusive": 0.9, "max_exclusive": 1.3},
-        "wind_speed": {"type": "minecraft:uniform", "min_inclusive": 0.0, "max_exclusive": 0.4}},
-    "cave_frostfire_pillar_huge": {"type": "minecraft:large_dripstone", "replaceable_blocks": "#minecraft:dripstone_replaceable_blocks",
-        "floor_to_ceiling_search_range": 80, "column_radius": uniform(5, 13),
-        "height_scale": {"type": "minecraft:uniform", "min_inclusive": 1.35, "max_exclusive": 4.0},
-        "max_column_radius_to_cave_height_ratio": 0.4, "min_bluntness_for_wind": 0.0, "min_radius_for_wind": 0,
-        "stalactite_bluntness": {"type": "minecraft:uniform", "min_inclusive": 0.2, "max_exclusive": 1.5},
-        "stalagmite_bluntness": {"type": "minecraft:uniform", "min_inclusive": 0.2, "max_exclusive": 1.0},
-        "wind_speed": {"type": "minecraft:uniform", "min_inclusive": 0.0, "max_exclusive": 0.3}},
-    "cave_frostfire_columns": {"type": "minecraft:random_selector", "default": inline("orogeny:cave_frostfire_pillar_huge"),
-                               "features": [{"chance": 0.965, "feature": inline("orogeny:cave_frostfire_pillar")}]},
-    "cave_frostfire_sculk": {"type": "minecraft:sequence", "features": [
-        {"feature": {"type": "minecraft:sculk_patch", "amount_per_charge": 500, "charge_count": 1, "growth_rounds": 8,
-                     "spread_attempts": 64, "spread_rounds": 1}, "placement": []},
-        {"feature": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:sculk_catalyst",
-                                                                   "properties": {"bloom": "false"}}},
-         "placement": [{"type": "minecraft:random_chance", "chance": 0.425},
-                       {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:has_sturdy_face",
-                        "direction": "up", "offset": [0, -1, 0]}}]}]},
+    "cave_fumarole_floor": patch_cfg(weighted(("minecraft:snow_block", 3), ("minecraft:packed_ice", 3), ("minecraft:ice", 1)),
+                                     "floor", "orogeny:cave_ice_spike", 0.06, depth=(1, 2), radius=(3, 6), edge=0.4,
+                                     replaceable="#minecraft:base_stone_overworld"),
+    "cave_fumarole_ceiling": patch_cfg(weighted(("minecraft:packed_ice", 3), ("minecraft:blue_ice", 2)), "ceiling",
+                                       "orogeny:cave_icicle", 0.35, depth=(1, 3), radius=(3, 6), edge=0.4,
+                                       replaceable="#minecraft:base_stone_overworld"),
+    "cave_fumarole_crust": patch_cfg(weighted(("minecraft:sulfur", 4), ("minecraft:magma_block", 1)), "floor",
+                                     "minecraft:sulfur_spike", 0.25, depth=1, radius=(2, 4), edge=0.5,
+                                     replaceable="#minecraft:base_stone_overworld"),
 })
-# Terralith's counts were per chunk over Y -64..30 (94 blocks); these are per 256 blocks of cave layer.
 PLACED.update({
-    "cave_frostfire_floor": cave_placed("orogeny:cave_frostfire_floor", 46, SCAN_FLOOR_32),
-    "cave_frostfire_ceiling": cave_placed("orogeny:cave_frostfire_ceiling", 33, SCAN_CEILING_30),
-    "cave_frostfire_columns": cave_placed("orogeny:cave_frostfire_columns", 7),
-    "cave_frostfire_sculk": cave_placed("orogeny:cave_frostfire_sculk", 440),
+    "cave_fumarole_floor": cave_placed("orogeny:cave_fumarole_floor", 55, SCAN_FLOOR),
+    "cave_fumarole_ceiling": cave_placed("orogeny:cave_fumarole_ceiling", 45, SCAN_CEILING),
+    "cave_fumarole_icicles": cave_placed("orogeny:cave_icicle", 40, SCAN_CEILING),
+    "cave_fumarole_crust": cave_placed("orogeny:cave_fumarole_crust", 14, SCAN_FLOOR),
+    "cave_fumarole_pools": cave_placed("minecraft:sulfur_pool", 5, SCAN_FLOOR),
 })
-biome("frostfire_caves", id=149, base="dripstone_caves", temp=0.8, downfall=0.4, colors={"water_color": "#1b46d0"},
-      veg=[], top=None, cave=True, drop_attrs=["minecraft:audio/background_music"],
-      steps={1: [], 2: ["minecraft:amethyst_geode", "minecraft:large_dripstone"],
-             7: ["orogeny:cave_frostfire_columns", "orogeny:cave_frostfire_sculk", "orogeny:cave_frostfire_floor",
-                 "orogeny:cave_frostfire_ceiling"]},
-      spawns={"monster": [{"type": "minecraft:skeleton", "count": 4, "weight": 100},
-                          {"type": "minecraft:stray", "count": 4, "weight": 50}],
-              "underground_water_creature": [{"type": "minecraft:glow_squid", "count": uniform(4, 6), "weight": 10}]},
-      attrs={"minecraft:visual/fog_color": "#000000",
-             "minecraft:visual/ambient_particles": {"argument": [{"particle": {"type": "minecraft:dust_color_transition",
-                 "from_color": [0.5, 1.0, 1.0], "to_color": [0.0, 0.0, 1.0], "scale": 1.0}, "probability": 0.001}],
-                 "modifier": "append"}})
+cave_biome("fumarole_caves", 149, 0.0, downfall=0.5, colors={"water_color": "#5fb8cf"},
+           under=["orogeny:cave_fumarole_pools", "orogeny:cave_fumarole_crust", "orogeny:cave_fumarole_floor",
+                  "orogeny:cave_fumarole_ceiling", "orogeny:cave_fumarole_icicles"],
+           ores=["orogeny:cave_ore_packed_ice", "orogeny:cave_ore_blue_ice", "orogeny:cave_ore_magma"],
+           spawns_from="snowy_plains",
+           attrs={"minecraft:visual/fog_color": "#a9bccb",
+                  "minecraft:visual/ambient_particles": {"argument": [{"particle": {"type": "minecraft:white_ash"},
+                                                                     "probability": 0.012}], "modifier": "append"}})
 cave_biome("infested_caves", 151, 0.7,
            under=["orogeny:cave_rubble_floor", "orogeny:cave_monster_rooms"],
            ores=["orogeny:cave_ore_infested", "orogeny:cave_ore_infested_cobble"],
@@ -1453,9 +1353,9 @@ cave_biome("deep_shaft", 171, 0.7, under=["orogeny:cave_moss_ceiling"],
            veg=["orogeny:cave_wall_vines", "orogeny:cave_glow_lichen_sparse"],
            add_spawns={"ambient": [{"type": "minecraft:bat", "count": uniform(4, 8), "weight": 40}]})
 
-# ---- v1.5 part three round C: the deep dark forest, the deep dark incursion and the giant selenite chamber. Each is a
-# giant hall (pipeline/CaveHalls: exact, inside its region cell, its biome follows it); world/CaveStone paints the
-# incursion's bare pillars (polished basalt, which sculk doesn't spread onto) and the selenite beams (calcite). ----
+# ---- v1.5 part three round C: the deep dark forest, the deep dark infestation and the giant selenite chamber. The
+# forest and the selenite chamber are giant halls (pipeline/CaveHalls: exact, inside its region cell, its biome follows
+# it); world/CaveStone paints the selenite beams (calcite). ----
 NO_SOIL = {"type": "minecraft:rule_based", "rules": []}   # trees keep the sculk and rock under their trunks
 FOREST_GROUND = ["minecraft:sculk", "minecraft:deepslate", "minecraft:cobbled_deepslate", "minecraft:tuff",
                  "minecraft:stone", "minecraft:sculk_catalyst", "minecraft:gravel"]
@@ -1512,59 +1412,31 @@ biome("deep_dark_forest", id=164, base="deep_dark", temp=0.8, downfall=0.4, colo
       veg=["orogeny:cave_dd_warped_trees", "orogeny:cave_dd_sculk_trees", "orogeny:cave_dd_dead_pale_trees"],
       add_steps={7: ["orogeny:cave_dd_forest_floor"]}, no_tags=["has_structure/ancient_city"])
 
-# ---- The deep dark incursion, exactly WWOO's (wythers:deep_dark_incursion, Abbie5/WWOO, Oct 27): plain caves (no
-# hall) 45-115 blocks under cool, humid ground (pipeline/CaveBiomes), vanilla's deep dark sculk, and WWOO's "emergent
-# deep dark vegetation": sculk patches on the cave floors with a rare giant sculk mushroom, stripped warped stems under
-# a sculk cap (WWOO's sculk morel) or a forked stem with verdant froglight caps (its sculk omphalotus illudens). ----
-def sculk_fungus(trunk_placer, foliage_placer, cap):
-    return {"type": "minecraft:tree", "decorators": [], "ignore_vines": True,
-            # WWOO's force_dirt with a stripped warped stem dirt provider: always under the trunk.
-            "below_trunk_provider": {"type": "minecraft:rule_based", "rules": [
-                {"if_true": {"type": "minecraft:true"},
-                 "then": {"id": "minecraft:stripped_warped_stem", "properties": {"axis": "y"}}}]},
-            "minimum_size": {"type": "minecraft:two_layers_feature_size", "limit": 0, "lower_size": 0, "upper_size": 0},
-            "trunk_placer": trunk_placer, "foliage_placer": foliage_placer, "foliage_provider": cap,
-            "trunk_provider": {"id": "minecraft:stripped_warped_stem", "properties": {"axis": "y"}}}
-
-
+# ---- The deep dark infestation (Nov 2): the deep dark spreading up into ordinary caves, well above its own layer.
+# Vanilla's deep dark sculk, plus sculk veins creeping over the walls and ceilings, sculk mats on the floors, stalks of
+# sculk topped by sensors, sculk dripping from the ceiling and the odd shrieker. Dark teal water and haze. ----
 FEATURES.update({
-    "cave_incursion_sculk_morel": sculk_fungus(
-        {"type": "minecraft:straight_trunk_placer", "base_height": 3, "height_rand_a": 1, "height_rand_b": 0},
-        {"type": "minecraft:fancy_foliage_placer", "radius": 1, "offset": 1, "height": 4}, {"id": "minecraft:sculk"}),
-    "cave_incursion_sculk_omphalotus": sculk_fungus(
-        {"type": "minecraft:forking_trunk_placer", "base_height": 2, "height_rand_a": 0, "height_rand_b": 2},
-        {"type": "minecraft:acacia_foliage_placer", "radius": 1, "offset": 1},
-        {"id": "minecraft:verdant_froglight", "properties": {"axis": "y"}}),
-    # WWOO's caves/sculk_patch: a sculk floor patch over base stone, 1% of its blocks growing a giant sculk mushroom.
-    "cave_incursion_patch": patch_cfg("minecraft:sculk", "floor", "orogeny:cave_incursion_fungi", 0.01, radius=(4, 7),
-                                      replaceable="#minecraft:base_stone_overworld"),
+    "cave_sculk_stalk": column("up", ("minecraft:sculk", (1, 4)),
+                               ({"id": "minecraft:sculk_sensor", "properties": {"sculk_sensor_phase": "inactive",
+                                 "power": "0", "waterlogged": "false"}}, 1)),
+    "cave_sculk_drip": column("down", ("minecraft:sculk", (1, 3))),
+    "cave_sculk_shrieker": {"type": "minecraft:simple_block", "to_place": {"id": "minecraft:sculk_shrieker",
+                            "properties": {"can_summon": "false", "shrieking": "false", "waterlogged": "false"}}},
 })
-SELECTORS["cave_incursion_fungi"] = ("orogeny:cave_incursion_sculk_morel", [("orogeny:cave_incursion_sculk_omphalotus", 0.1)])
+ON_SCULK = [{"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:matching_blocks",
+             "offset": [0, -1, 0], "blocks": ["minecraft:sculk"]}}]
 PLACED.update({
-    "cave_incursion_sculk_morel": {"feature": "orogeny:cave_incursion_sculk_morel", "placement": []},
-    "cave_incursion_sculk_omphalotus": {"feature": "orogeny:cave_incursion_sculk_omphalotus", "placement": []},
-    # WWOO: 125 per chunk from the bottom of the world to Y 256 (320 blocks), so 100 per 256 blocks of cave layer; the
-    # floor found 12 blocks down, then up or down 1.
-    "cave_incursion_vegetation": cave_placed("orogeny:cave_incursion_patch", 100, [
-        {"type": "minecraft:environment_scan", "allowed_search_condition": {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
-         "direction_of_search": "down", "max_steps": 12, "target_condition": {"type": "minecraft:solid"}},
-        {"type": "minecraft:offset", "x": 0, "y": uniform(-1, 1), "z": 0}]),
+    "cave_infestation_veins": cave_placed("minecraft:sculk_vein", 160),
+    "cave_infestation_mats": cave_placed("minecraft:sculk_patch_deep_dark", 40, SCAN_FLOOR),
+    "cave_infestation_stalks": cave_placed("orogeny:cave_sculk_stalk", 24, SCAN_FLOOR),
+    "cave_infestation_drips": cave_placed("orogeny:cave_sculk_drip", 30, SCAN_CEILING),
+    "cave_infestation_shriekers": cave_placed("orogeny:cave_sculk_shrieker", 5, SCAN_FLOOR, post=ON_SCULK),
 })
-# Its ores are WWOO's list (vanilla's dripstone caves' of its day: large copper veins, no medium diamonds).
-WWOO_INCURSION_ORES = ["minecraft:ore_dirt", "minecraft:ore_gravel", "minecraft:ore_granite_upper",
-    "minecraft:ore_granite_lower", "minecraft:ore_diorite_upper", "minecraft:ore_diorite_lower",
-    "minecraft:ore_andesite_upper", "minecraft:ore_andesite_lower", "minecraft:ore_tuff", "minecraft:ore_coal_upper",
-    "minecraft:ore_coal_lower", "minecraft:ore_iron_upper", "minecraft:ore_iron_middle", "minecraft:ore_iron_small",
-    "minecraft:ore_gold", "minecraft:ore_gold_lower", "minecraft:ore_redstone", "minecraft:ore_redstone_lower",
-    "minecraft:ore_diamond", "minecraft:ore_diamond_large", "minecraft:ore_diamond_buried", "minecraft:ore_lapis",
-    "minecraft:ore_lapis_buried", "minecraft:ore_copper_large", "minecraft:underwater_magma", "minecraft:disk_sand",
-    "minecraft:disk_clay", "minecraft:disk_gravel"]
-# Vanilla's deep dark already gives the rest: geodes, monster rooms, sculk veins and deep dark sculk patches, glow
-# lichen, freeze top layer, no mob spawns, deep dark music and sky #78a7ff. WWOO's colours on top: fog #c0d8ff, water
-# #021f2c, underwater fog #010d13.
-biome("deep_dark_incursion", id=172, base="deep_dark", temp=0.8, downfall=0.4, colors={"water_color": "#021f2c"},
-      top=None, cave=True, veg=["orogeny:cave_incursion_vegetation"], steps={6: WWOO_INCURSION_ORES},
-      attrs={"minecraft:visual/fog_color": "#c0d8ff", "minecraft:visual/water_fog_color": "#010d13"},
+biome("deep_dark_infestation", id=172, base="deep_dark", temp=0.7, downfall=0.5, colors={"water_color": "#0a3d47"},
+      top=None, cave=True,
+      veg=["orogeny:cave_infestation_veins", "orogeny:cave_infestation_mats", "orogeny:cave_infestation_stalks",
+           "orogeny:cave_infestation_drips", "orogeny:cave_infestation_shriekers"],
+      attrs={"minecraft:visual/fog_color": "#0d2a30", "minecraft:visual/water_fog_color": "#06161a"},
       no_tags=["has_structure/ancient_city"])
 # Giant selenite chamber: hot and dark (no glow lichen), magma patches and amethyst on the floor and on the beams.
 biome("giant_selenite_beams", id=174, base="dripstone_caves", temp=2.0, downfall=0.0, colors={}, veg=[], top=None,

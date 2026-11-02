@@ -73,6 +73,6 @@ Tip: with 4 GB or more of free VRAM, set `inference.offload_models=false` in `co
 
 ### Credits
 
-The AI terrain model and the original mod are [Terrain Diffusion](https://github.com/xandergos/terrain-diffusion-mc) by xandergos (MIT). Biome and cave styles are inspired by Terralith, Biomes O' Plenty, William Wythers' Overhauled Overworld and vanilla Minecraft, rebuilt with vanilla blocks. No code or assets from those mods are included.
+The AI terrain model and the original mod are [Terrain Diffusion](https://github.com/xandergos/terrain-diffusion-mc) by xandergos (MIT). Several biome and cave ideas are inspired by Terralith, Biomes O' Plenty, William Wythers' Overhauled Overworld, Darker Depths and vanilla Minecraft. Orogeny's versions are its own designs, built with vanilla blocks; no code, assets or data from those mods are included.
 
 Not related to PolyhedralDev's *Terra*.
