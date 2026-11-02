@@ -586,6 +586,39 @@ public final class LocalTerrainProvider {
      * Debug: the hydrology class of the native pixel under block (x, z): 0 none, 1 stream, 2 river, 3 main river, 4 lake,
      * or -1 if unavailable. Runs the region on the inference thread if it is not cached yet.
      */
+    /**
+     * Debug (/orogeny-column): the native pixels around a block as the carver sees them, one line per row (north up):
+     * class (L lake, s/r/m channel, . none), elevation and hydrology surface in metres, plus each region's scale fit.
+     */
+    public static String nativeHydrologyDebug(int blockX, int blockZ, int radius) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            int scale = Math.max(1, WorldScaleManager.getCurrentScale());
+            int pi0 = Math.floorDiv(blockZ, scale), pj0 = Math.floorDiv(blockX, scale);
+            RiverService svc = rivers();
+            RiverService.Source src = (a, b, c, d) -> getPipelineData(a, b, c, d, true);
+            sb.append("native pixels around you (").append(scale).append(" blocks each; class elev/surface m; fit scale ")
+                    .append(svc.params().blockScale).append("), centre pixel ").append(pi0).append(',').append(pj0).append(":\n");
+            for (int dr = -radius; dr <= radius; dr++) {
+                for (int dc = -radius; dc <= radius; dc++) {
+                    int pi = pi0 + dr, pj = pj0 + dc;
+                    RiverService.Region lr = com.github.xandergos.terraindiffusionmc.hydrology.RiverCarver.lakeRegion(
+                            (ri, rj) -> svc.region(ri, rj, src), pi, pj, svc.regionSize());
+                    int k = lr.index(pi, pj);
+                    if (k < 0) { sb.append("      ?      "); continue; }
+                    byte v = lr.cls[k];
+                    char ch = v == 4 ? 'L' : v == 1 ? 's' : v == 2 ? 'r' : v == 3 ? 'm' : '.';
+                    float e = lr.elev != null ? lr.elev[k] : Float.NaN;
+                    sb.append(String.format(" %c%5.0f/%5.0f", ch, e, lr.surface[k]));
+                }
+                sb.append('\n');
+            }
+        } catch (Exception e) {
+            sb.append("native pixels unavailable: ").append(e).append('\n');
+        }
+        return sb.toString();
+    }
+
     public static byte hydrologyClassAt(int blockX, int blockZ) {
         try {
             int scale = Math.max(1, WorldScaleManager.getCurrentScale());

@@ -163,6 +163,7 @@ public class TerrainDiffusionMc implements ModInitializer {
                 }
                 log.append('\n');
             }
+            log.append(LocalTerrainProvider.nativeHydrologyDebug(p.getX(), p.getZ(), 5));
             LOG.info(log.toString());
             final int mismatches = mism;
             ctx.getSource().sendSuccess(() -> Component.literal("Column " + p.getX() + " " + p.getZ() + ": generated Y "
