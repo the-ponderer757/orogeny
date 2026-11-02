@@ -577,6 +577,8 @@ public final class LocalTerrainProvider {
             int margin = Math.max(TerrainDiffusionConfig.riverMargin(), p.flowSteps + 8);
             riverService = new RiverService(TerrainDiffusionConfig.riverRegionSize(), margin, p);
         }
+        // The lakes are fitted to the block ground of the current world's scale (RiverMap.Params#blockScale).
+        riverService.params().blockScale = Math.max(1, WorldScaleManager.getCurrentScale());
         return riverService;
     }
 

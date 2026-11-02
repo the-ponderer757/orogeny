@@ -8,7 +8,7 @@
 - Streams follow the real downhill direction, wandering and joining like real drainage, instead of running in dead-straight parallel lines at 45 degrees on long even slopes.
 - Fewer streams in very dry mountains: the minimum runoff given to high ground now shrinks in deserts.
 - Lakes in cold climates (mean temperature below 0 °C at the water) freeze over: a layer of ice on top with liquid water under it (`rivers.freeze_snowy_lakes`, on by default).
-- Large lakes no longer stand a few blocks above the ground along their shores: the small-scale terrain noise is kept from cutting dips through a lake's rim.
+- Lakes no longer stand above the ground at their shores behind stair-stepped banks: each lake's level is fitted to its rim as the world's blocks draw it (a rim one terrain pixel wide sagged tens of metres between pixels at higher world scales), and the small-scale terrain noise no longer cuts dips through a rim.
 - Axolotls only in lakes above 4,500 m (was 3,000 m).
 
 ### Configuration

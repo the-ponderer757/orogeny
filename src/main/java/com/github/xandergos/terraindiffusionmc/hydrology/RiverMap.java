@@ -19,6 +19,11 @@ public final class RiverMap {
         public int flowSteps = 80;
         /** Minimum lake size (native pixels) and depth (metres of fill). */
         public int lakeMinArea = 150;
+        /**
+         * Blocks per native pixel in the world the lakes are for (its scale), or 1 to skip {@link #fitLakesToBlocks}. Set
+         * before each region is computed (the scale can change between worlds; the region cache is cleared then).
+         */
+        public volatile int blockScale = 1;
         /** Larger depressions are artefacts of the generated terrain (a basin the sea would drain), not lakes. */
         public int lakeMaxArea = 2500;
         public float lakeMinDepth = 2f;
@@ -290,6 +295,7 @@ public final class RiverMap {
             dropLakesNearHot(lake, hot, H, W, stack, members);
             dropLakesOnCones(lake, hot, H, W, stack, members);
         }
+        if (p.blockScale > 1) fitLakesToBlocks(elev, lake, net.filled, H, W, p.blockScale, stack, members);
 
         for (int i = 0; i < n; i++) {
             float e = elev[i];
@@ -354,6 +360,114 @@ public final class RiverMap {
         Result result = new Result(out, net.downstream, net.filled, elev);
         result.size = channelSize(out, q, elev, net.downstream, p);
         return result;
+    }
+
+    /** Metres a lake stays under the lowest point of its rim at block resolution. */
+    private static final float BLOCK_RIM_FREEBOARD = 1f;
+
+    /**
+     * Lowers each lake to what its rim holds at block resolution. A lake is filled to its basin's rim at native
+     * resolution, but the world's ground is the native grid upsampled (Catmull-Rom, as the tiles do it), and a rim one
+     * pixel wide between a deep lake and lower ground outside sags tens of metres between the pixel centres. The water
+     * then stood above the ground beside it, and the carver's natural dams built it up into stairs to the water level
+     * (Calvin, Nov 1, X 65035 Z 169251, scale 6: water 9 blocks over the ground at the shore). Per lake: the upsampled
+     * ground over the lake and the pixels next to it, flooded from the outside of that band (priority flood); the
+     * lowest level the band holds over any lake block below the old level is the new level (less
+     * {@link #BLOCK_RIM_FREEBOARD}). A lake left with nothing under it is dropped. The block ground only gets higher
+     * than this near lakes (the tile's noise there only raises it), so the water never stands over its shore.
+     */
+    private static void fitLakesToBlocks(float[] elev, boolean[] lake, float[] filled, int H, int W, int s,
+                                         int[] stack, int[] members) {
+        int n = H * W;
+        boolean[] seen = new boolean[n];
+        for (int s0 = 0; s0 < n; s0++) {
+            if (!lake[s0] || seen[s0]) continue;
+            int sp = 0, count = 0;
+            stack[sp++] = s0;
+            seen[s0] = true;
+            int r0 = H, r1 = -1, c0 = W, c1 = -1;
+            while (sp > 0) {
+                int i = stack[--sp];
+                members[count++] = i;
+                int r = i / W, c = i % W;
+                r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c);
+                if (r > 0 && lake[i - W] && !seen[i - W]) { seen[i - W] = true; stack[sp++] = i - W; }
+                if (r < H - 1 && lake[i + W] && !seen[i + W]) { seen[i + W] = true; stack[sp++] = i + W; }
+                if (c > 0 && lake[i - 1] && !seen[i - 1]) { seen[i - 1] = true; stack[sp++] = i - 1; }
+                if (c < W - 1 && lake[i + 1] && !seen[i + 1]) { seen[i + 1] = true; stack[sp++] = i + 1; }
+            }
+            float level = Float.NEGATIVE_INFINITY;
+            for (int k = 0; k < count; k++) level = Math.max(level, filled[members[k]]);
+            // The band: the lake's pixels and those next to it (8-neighbours), inside a box with room for the
+            // interpolation (2 pixels) round it.
+            int br0 = r0 - 1, br1 = r1 + 1, bc0 = c0 - 1, bc1 = c1 + 1;
+            int pr0 = Math.max(0, br0 - 2), pr1 = Math.min(H - 1, br1 + 2), pc0 = Math.max(0, bc0 - 2), pc1 = Math.min(W - 1, bc1 + 2);
+            int ph = pr1 - pr0 + 1, pw = pc1 - pc0 + 1;
+            byte[] band = new byte[ph * pw];   // 2 lake, 1 next to it, 0 outside
+            for (int k = 0; k < count; k++) {
+                int i = members[k], r = i / W - pr0, c = i % W - pc0;
+                band[r * pw + c] = 2;
+            }
+            for (int k = 0; k < count; k++) {
+                int i = members[k], r = i / W - pr0, c = i % W - pc0;
+                for (int dr = -1; dr <= 1; dr++)
+                    for (int dc = -1; dc <= 1; dc++) {
+                        int rr = r + dr, cc = c + dc;
+                        if (rr < 0 || cc < 0 || rr >= ph || cc >= pw) continue;
+                        if (band[rr * pw + cc] == 0) band[rr * pw + cc] = 1;
+                    }
+            }
+            // The upsampled ground over the box: the same Catmull-Rom resize as the tiles (translation-consistent, so a
+            // crop gives the same values away from its edge).
+            float[][] crop = new float[ph][pw];
+            for (int r = 0; r < ph; r++)
+                for (int c = 0; c < pw; c++) crop[r][c] = elev[(pr0 + r) * W + pc0 + c];
+            float[][] up = com.github.xandergos.terraindiffusionmc.pipeline.LaplacianUtils.bicubicResize(crop, ph * s, pw * s);
+            int bh = ph * s, bw = pw * s, bn = bh * bw;
+            // Priority flood over the band's blocks from its outside.
+            float[] fill = new float[bn];
+            java.util.Arrays.fill(fill, Float.NaN);
+            java.util.PriorityQueue<long[]> heap = new java.util.PriorityQueue<>((x, y) -> Float.compare(Float.intBitsToFloat((int) x[0]), Float.intBitsToFloat((int) y[0])));
+            for (int br = 0; br < bh; br++)
+                for (int bc = 0; bc < bw; bc++) {
+                    if (band[(br / s) * pw + bc / s] == 0) continue;
+                    boolean edge = false;
+                    for (int d = 0; d < 4 && !edge; d++) {
+                        int rr = br + (d == 0 ? -1 : d == 1 ? 1 : 0), cc = bc + (d == 2 ? -1 : d == 3 ? 1 : 0);
+                        edge = rr < 0 || cc < 0 || rr >= bh || cc >= bw || band[(rr / s) * pw + cc / s] == 0;
+                    }
+                    if (!edge) continue;
+                    int b = br * bw + bc;
+                    fill[b] = up[br][bc];
+                    heap.add(new long[]{Float.floatToIntBits(fill[b]), b});
+                }
+            float hold = Float.POSITIVE_INFINITY;
+            while (!heap.isEmpty()) {
+                long[] top = heap.poll();
+                int b = (int) top[1];
+                float f = Float.intBitsToFloat((int) top[0]);
+                if (f > fill[b]) continue;
+                int br = b / bw, bc = b % bw;
+                if (band[(br / s) * pw + bc / s] == 2 && up[br][bc] < level) hold = Math.min(hold, f);
+                for (int d = 0; d < 4; d++) {
+                    int rr = br + (d == 0 ? -1 : d == 1 ? 1 : 0), cc = bc + (d == 2 ? -1 : d == 3 ? 1 : 0);
+                    if (rr < 0 || cc < 0 || rr >= bh || cc >= bw || band[(rr / s) * pw + cc / s] == 0) continue;
+                    int q = rr * bw + cc;
+                    float fq = Math.max(up[rr][cc], f);
+                    if (!Float.isNaN(fill[q]) && fill[q] <= fq) continue;
+                    fill[q] = fq;
+                    heap.add(new long[]{Float.floatToIntBits(fq), q});
+                }
+            }
+            if (hold == Float.POSITIVE_INFINITY || hold - BLOCK_RIM_FREEBOARD >= level) continue;
+            float lvl = hold - BLOCK_RIM_FREEBOARD;
+            float minElev = Float.POSITIVE_INFINITY;
+            for (int k = 0; k < count; k++) minElev = Math.min(minElev, elev[members[k]]);
+            for (int k = 0; k < count; k++) {
+                if (lvl <= minElev) lake[members[k]] = false;   // nothing left to hold
+                else filled[members[k]] = lvl;
+            }
+        }
     }
 
     /** How far (native pixels) a lake reaches for a stream beside it, and how far above the lake the ground between may rise (metres). */

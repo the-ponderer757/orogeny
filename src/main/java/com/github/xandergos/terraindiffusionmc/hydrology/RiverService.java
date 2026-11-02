@@ -194,6 +194,11 @@ public final class RiverService {
         return size;
     }
 
+    /** The hydrology parameters (shared by every region this service computes). */
+    public RiverMap.Params params() {
+        return params;
+    }
+
     public synchronized void clear() {
         cache.clear();
     }
