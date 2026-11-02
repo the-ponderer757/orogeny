@@ -827,7 +827,8 @@ def grove_trees_checked(feature, sapling, above, below=0):
     return p
 
 
-WALL_SPREAD = [{"type": "minecraft:offset", "x": 0, "y": {"type": "minecraft:uniform", "min_inclusive": -32, "max_inclusive": 0}, "z": 0}]
+# Down the wall from the top (an offset is limited to 16 blocks, so two of them reach 32).
+WALL_SPREAD = [{"type": "minecraft:offset", "x": 0, "y": {"type": "minecraft:uniform", "min_inclusive": -16, "max_inclusive": 0}, "z": 0}] * 2
 PLACED.update({
     "lodgepole_pine_checked": tree_checked("orogeny:lodgepole_pine", "minecraft:spruce_sapling"),
     "ponderosa_pine_checked": tree_checked("orogeny:ponderosa_pine", "minecraft:spruce_sapling"),
