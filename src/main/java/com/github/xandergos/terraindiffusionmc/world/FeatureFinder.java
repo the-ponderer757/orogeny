@@ -99,6 +99,7 @@ public final class FeatureFinder {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(literal("orogeny-find")
+                .requires(CommandAccess::operatorOrOwner)
                 .then(literal("cave")
                         .then(argument("name", StringArgumentType.word())
                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(CAVES.keySet(), builder))

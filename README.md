@@ -58,7 +58,7 @@ Orogeny generates the world on the server, so the server is where it needs to be
    ```
 5. Start the server. The log shows `Orogeny: world scale N` once the world loads.
 
-Note that Orogeny's commands currently work for every player, including `/orogeny-find`, which teleports. `/orogeny-explore` opens its map on the server's own machine (127.0.0.1), so it is only useful when you play on the same computer as the server.
+`/orogeny-find` (which teleports) and `/orogeny-column` are for operators only on a server, like `/tp`; in singleplayer the world's owner can always use them, even with cheats off. `/orogeny-explore` opens its map on the server's own machine (127.0.0.1), so it is only useful when you play on the same computer as the server.
 
 ## Commands
 

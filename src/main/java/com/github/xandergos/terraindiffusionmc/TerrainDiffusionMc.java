@@ -62,7 +62,9 @@ public class TerrainDiffusionMc implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 {
                     dispatcher.register(literal("orogeny-explore").executes(TerrainDiffusionMc::executeExplore));
-                    dispatcher.register(literal("orogeny-column").executes(TerrainDiffusionMc::executeColumn));
+                    dispatcher.register(literal("orogeny-column")
+                            .requires(com.github.xandergos.terraindiffusionmc.world.CommandAccess::operatorOrOwner)
+                            .executes(TerrainDiffusionMc::executeColumn));
                     FeatureFinder.register(dispatcher);
                 }
         );
