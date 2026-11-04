@@ -9,10 +9,13 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
@@ -28,6 +31,8 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 public final class NaturalIceMelt {
     /** Biome votes are taken this far round the ice, every {@link #VOTE_STEP} blocks. */
     private static final int VOTE_RADIUS = 8, VOTE_STEP = 4;
+    /** Sky light just above the ice at least this: open sky, or under a tree or a snow layer; not in a cave. */
+    private static final int SKY_LIGHT_MIN = 8;
 
     private NaturalIceMelt() {
     }
@@ -37,13 +42,29 @@ public final class NaturalIceMelt {
         if (!TerrainDiffusionConfig.meltNaturalIce() || TerrainDiffusionConfig.riverFreezeEnabled()) return false;
         if (level.dimension() != Level.OVERWORLD) return false;
         if (!(level.getChunkSource().getGenerator().getBiomeSource() instanceof TerrainDiffusionBiomeSource)) return false;
-        // Inland lake ice only: above the sea (sea ice and icebergs stay), the top block of its column (cave ice
-        // stays), with water under it.
+        // Inland lake ice only: above the sea (sea ice stays), open to the sky (cave ice stays; a snow layer or leaves
+        // overhead don't count), not in an ocean biome (icebergs stay), and on a lake: water under it, or, where the
+        // lake is a single block deep at its shore, next to more lake water or ice.
         if (pos.getY() <= level.getSeaLevel()) return false;
-        if (level.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ()) != pos.getY() + 1) return false;
-        if (!level.getFluidState(pos.below()).is(FluidTags.WATER)) return false;
+        if (level.getBrightness(LightLayer.SKY, pos.above()) < SKY_LIGHT_MIN) return false;
+        if (level.getBiome(pos).is(BiomeTags.IS_OCEAN)) return false;
+        if (!onLake(level, pos)) return false;
         if (snowyHere(level, pos)) return false;
         return !PlacedIce.get(level).contains(pos);
+    }
+
+    /**
+     * Water under the ice, or (where the lake is one block deep) water beside it, or ice with water under it: an ice
+     * floor on dry land, such as an old ice road, doesn't count.
+     */
+    private static boolean onLake(ServerLevel level, BlockPos pos) {
+        if (level.getFluidState(pos.below()).is(FluidTags.WATER)) return true;
+        for (Direction d : Direction.Plane.HORIZONTAL) {
+            BlockPos n = pos.relative(d);
+            if (level.getFluidState(n).is(FluidTags.WATER)) return true;
+            if (level.getBlockState(n).is(Blocks.ICE) && level.getFluidState(n.below()).is(FluidTags.WATER)) return true;
+        }
+        return false;
     }
 
     /**
