@@ -85,9 +85,14 @@ public final class LocalTerrainProvider {
         public byte[][] oceanTags;
         /**
          * Mean annual air temperature per column (degrees C, rounded; the climate's own field, no biome noise); null if
-         * the tile was built without a climate. Lakes freeze over below 0 (world.RiverWaterPlacer).
+         * the tile was built without a climate. A lake with only bare rock round it freezes over below 0 (world.RiverWaterPlacer).
          */
         public byte[][] tempC;
+        /**
+         * Per column, whether its lake freezes over (computed once per tile by world.RiverWaterPlacer, from the biomes
+         * the whole lake lies in); null until then.
+         */
+        public volatile boolean[][] lakeIce;
 
         public HeightmapData(short[][] heightmap, short[][] biomeIds, int width, int height) {
             this.heightmap = heightmap;

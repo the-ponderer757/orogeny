@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5 (Minecraft 26.3)
+
+### Rivers and lakes
+- Only lakes in snowy biomes freeze over: biomes where it snows rather than rains and snow lies on the ground (snowy plains, snowy taiga, groves, snowy slopes, frozen peaks, jagged peaks, arctic, glaciers, snowy beaches). Lakes in cold meadows, grasslands, tundra and other biomes without snow stay open water. Each lake is decided whole by the biomes in and around it, so a mountain lake with bare rocky shores still freezes evenly.
+
 ## 1.0.4 (Minecraft 26.3)
 
 ### Biomes and caves

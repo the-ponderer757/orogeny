@@ -89,11 +89,11 @@ public final class RiverWaterPlacer {
 
                 boolean frozen = freezeOn && (freezeM > 0f ? top >= freezeY : frozenAround(data.biomeIds, lz, lx));
                 boolean isLake = data.waterIsLake != null && data.waterIsLake[lz][lx];
-                // A lake in a snowy climate freezes over: ice on the top layer only, liquid water under it (Calvin, Nov 1).
-                // Decided by the climate's temperature, not the biome: the biomes along a mountain lake's shore and over
-                // its steep-sided bed are bare stony peaks (a slope class, not a climate), and their speckled edges left
-                // a band of open water round the shore and striped, chunk-sized holes in the ice (X 65024 Z 169157).
-                if (!frozen && isLake && snowyLakes && frozenLake(data, lz, lx, top)) frozen = true;
+                // A lake in a snowy biome freezes over: ice on the top layer only, liquid water under it (Calvin, Nov 1).
+                // Only biomes where it snows rather than rains, and that have snow in them: a lake in a cold meadow or
+                // grassland stays open (Calvin, Nov 4). Decided once for the whole lake (see lakeIce), so the bare
+                // stony-peak shores of a mountain lake can't leave a band of open water or striped holes in its ice.
+                if (!frozen && isLake && snowyLakes && lakeIce(data)[lz][lx]) frozen = true;
                 short bed = data.surfaceY != null ? data.surfaceY[lz][lx] : RiverCarver.NONE;
                 if (!sinks.isEmpty() && CaveWater.inSink(sinks, x, z)) {
                     // Water down to the bed, then let it pour into the shaft once the chunk loads.
@@ -406,14 +406,109 @@ public final class RiverWaterPlacer {
         return !st.isAir() && st.getFluidState().isEmpty() && !st.is(Blocks.ICE) && st.canOcclude();
     }
 
-    /** Mean annual temperature (degrees C) below which a lake freezes over. */
+    /** Mean annual temperature (degrees C) below which a lake with no climate biomes round it freezes over. */
     private static final int LAKE_FREEZE_C = 0;
+    /** How far past a lake's edge (blocks) its shore biomes still count in the vote. */
+    private static final int LAKE_SHORE_VOTE = 6;
 
-    /** Whether a lake column freezes over: the climate is below {@link #LAKE_FREEZE_C} (tiles without one: the biomes). */
-    private static boolean frozenLake(HeightmapData data, int lz, int lx, int waterTop) {
+    /**
+     * Biomes where it snows rather than rains and snow lies on the ground: precipitation on and a base temperature
+     * under 0.15 (BiomeMixin rains on every warmer biome, at any height). Polar desert is cold but gets no snow, so its
+     * lakes stay open like the rest.
+     */
+    private static final short[] SNOWY_BIOMES = {3, 16, 116, 31, 32, 33, 34, 48, 85, 88, 121, 131};
+    /** Slope and shore classes that say nothing about the climate: they don't vote. */
+    private static final short[] NEUTRAL_BIOMES = {35, 120, 132};
+
+    private static boolean in(short[] set, short id) {
+        for (short v : set) if (v == id) return true;
+        return false;
+    }
+
+    /**
+     * Per column of the tile, whether its lake freezes over. Each lake (4-connected lake columns) is decided whole: its
+     * columns and the shore within {@link #LAKE_SHORE_VOTE} blocks vote by biome, and it freezes when most of the
+     * voters are snowy biomes. A lake ringed only by bare rock (no climate biome votes) falls back to the climate's
+     * temperature at its surface.
+     */
+    private static boolean[][] lakeIce(HeightmapData data) {
+        boolean[][] out = data.lakeIce;
+        if (out != null) return out;
+        synchronized (data) {
+            if (data.lakeIce != null) return data.lakeIce;
+            int h = data.height, w = data.width;
+            out = new boolean[h][w];
+            if (data.waterIsLake != null && data.biomeIds != null) {
+                int[] comp = new int[h * w];
+                java.util.Arrays.fill(comp, -1);
+                int[] stack = new int[h * w];
+                int[] members = new int[h * w];
+                int[] seen = new int[h * w];   // shore column -> last lake that counted it
+                java.util.Arrays.fill(seen, -1);
+                int id = 0;
+                for (int s0 = 0; s0 < h * w; s0++) {
+                    if (comp[s0] >= 0 || !isLakeColumn(data, s0 / w, s0 % w)) continue;
+                    int sp = 0, m = 0;
+                    comp[s0] = id;
+                    stack[sp++] = s0;
+                    while (sp > 0) {
+                        int k = stack[--sp], r = k / w, c = k % w;
+                        members[m++] = k;
+                        if (r > 0) sp = push(data, comp, stack, sp, k - w, r - 1, c, id);
+                        if (r < h - 1) sp = push(data, comp, stack, sp, k + w, r + 1, c, id);
+                        if (c > 0) sp = push(data, comp, stack, sp, k - 1, r, c - 1, id);
+                        if (c < w - 1) sp = push(data, comp, stack, sp, k + 1, r, c + 1, id);
+                    }
+                    int snowy = 0, other = 0;
+                    for (int q = 0; q < m; q++) {
+                        int r = members[q] / w, c = members[q] % w;
+                        for (int dz = -LAKE_SHORE_VOTE; dz <= LAKE_SHORE_VOTE; dz += 2) {
+                            for (int dx = -LAKE_SHORE_VOTE; dx <= LAKE_SHORE_VOTE; dx += 2) {
+                                int z = r + dz, x = c + dx;
+                                if (z < 0 || x < 0 || z >= h || x >= w) continue;
+                                int kk = z * w + x;
+                                if (seen[kk] == id) continue;
+                                seen[kk] = id;
+                                short b = data.biomeIds[z][x];
+                                if (in(NEUTRAL_BIOMES, b)) continue;
+                                if (in(SNOWY_BIOMES, b)) snowy++;
+                                else other++;
+                            }
+                        }
+                    }
+                    boolean freeze;
+                    if (snowy + other > 0) {
+                        freeze = snowy > other;
+                    } else {
+                        int k = members[0];
+                        freeze = belowFreezing(data, k / w, k % w, data.waterY[k / w][k % w]);
+                    }
+                    if (freeze) for (int q = 0; q < m; q++) out[members[q] / w][members[q] % w] = true;
+                    id++;
+                }
+            }
+            data.lakeIce = out;
+            return out;
+        }
+    }
+
+    private static boolean isLakeColumn(HeightmapData data, int r, int c) {
+        return data.waterIsLake[r][c] && data.waterY[r][c] != RiverCarver.NONE;
+    }
+
+    private static int push(HeightmapData data, int[] comp, int[] stack, int sp, int k, int r, int c, int id) {
+        if (comp[k] < 0 && isLakeColumn(data, r, c)) {
+            comp[k] = id;
+            stack[sp++] = k;
+        }
+        return sp;
+    }
+
+    /** Whether the climate at a lake's surface is below {@link #LAKE_FREEZE_C} (tiles without one: the biomes). */
+    private static boolean belowFreezing(HeightmapData data, int lz, int lx, int waterTop) {
         if (data.tempC != null) {
             // The temperature is the ground's, before the lake was cut into it: brought to the water's surface at the
-            // standard lapse rate, so one lake doesn't freeze round its rim and stay open in its middle.
+            // standard lapse rate.
             float metresPerBlock = 30f / WorldScaleManager.clampScale(WorldScaleManager.getCurrentScale());
             float waterM = (waterTop - 63) * metresPerBlock;
             float t = data.tempC[lz][lx] + 0.0065f * (data.heightmap[lz][lx] - waterM);
