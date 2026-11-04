@@ -4,6 +4,7 @@
 
 ### Rivers and lakes
 - Only lakes in snowy biomes freeze over: biomes where it snows rather than rains and snow lies on the ground (snowy plains, snowy taiga, groves, snowy slopes, frozen peaks, jagged peaks, arctic, glaciers, snowy beaches). Lakes in cold meadows, grasslands, tundra and other biomes without snow stay open water. Each lake is decided whole by the biomes in and around it, so a mountain lake with bare rocky shores still freezes evenly.
+- Lake ice that already generated in a biome without snow (worlds made before 1.0.5 froze lakes in any cold climate) melts back into water over a few minutes while players are nearby (`rivers.melt_natural_ice`, on by default). Ice you place yourself never melts this way; sea ice, icebergs and cave ice are left alone. Ice placed in those lakes before updating to 1.0.5 can't be told apart from natural ice and may melt.
 
 ## 1.0.4 (Minecraft 26.3)
 

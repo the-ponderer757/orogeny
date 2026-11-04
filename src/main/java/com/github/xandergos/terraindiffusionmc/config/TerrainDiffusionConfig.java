@@ -125,6 +125,8 @@ public final class TerrainDiffusionConfig {
     public static boolean riverFreezeEnabled() { return readBoolean("rivers.freeze", false); }
     /** Lakes in snowy biomes get a frozen top layer (liquid water under it), whatever rivers.freeze says. On by default. */
     public static boolean snowyLakesFreeze() { return readBoolean("rivers.freeze_snowy_lakes", true); }
+    /** Natural lake ice in biomes where water doesn't freeze melts into water (player-placed ice stays). */
+    public static boolean meltNaturalIce() { return readBoolean("rivers.melt_natural_ice", true); }
     /** No rivers or lakes above this terrain height in metres. */
     public static float riverMaxHeightMetres() { return readFloat("rivers.max_water_m", 6000f); }
     public static int lakeMinArea() { return readInt("rivers.lake_min_area", 150); }
